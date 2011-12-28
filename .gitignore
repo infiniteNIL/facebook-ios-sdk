@@ -20,3 +20,13 @@ test/UnitTest/build/
 *~
 *#
 .arcconfig
+
+# xcode noise
+build/*
+*.pbxuser
+*.mode1v3
+
+# xcode 4
+xcuserdata
+
+.DS_Store
