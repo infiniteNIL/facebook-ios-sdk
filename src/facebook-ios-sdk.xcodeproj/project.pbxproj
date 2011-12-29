@@ -33,6 +33,22 @@
 		5BDBF41014AB84A700EBB0E9 /* SBJsonUTF8Stream.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF3F614AB84A700EBB0E9 /* SBJsonUTF8Stream.m */; };
 		5BDBF41114AB84A700EBB0E9 /* SBJsonWriter.h in Headers */ = {isa = PBXBuildFile; fileRef = 5BDBF3F714AB84A700EBB0E9 /* SBJsonWriter.h */; };
 		5BDBF41214AB84A700EBB0E9 /* SBJsonWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF3F814AB84A700EBB0E9 /* SBJsonWriter.m */; };
+		5BDBF4CD14AB8A7A00EBB0E9 /* SFAuthorization.h in Headers */ = {isa = PBXBuildFile; fileRef = 5BDBF4BD14AB8A7A00EBB0E9 /* SFAuthorization.h */; };
+		5BDBF4CE14AB8A7A00EBB0E9 /* SFAuthorization.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4BE14AB8A7A00EBB0E9 /* SFAuthorization.m */; };
+		5BDBF4CF14AB8A7A00EBB0E9 /* SFSimpleEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 5BDBF4BF14AB8A7A00EBB0E9 /* SFSimpleEvent.h */; };
+		5BDBF4D014AB8A7A00EBB0E9 /* SFSimpleEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4C014AB8A7A00EBB0E9 /* SFSimpleEvent.m */; };
+		5BDBF4D114AB8A7A00EBB0E9 /* SFSimpleEventInvite.h in Headers */ = {isa = PBXBuildFile; fileRef = 5BDBF4C114AB8A7A00EBB0E9 /* SFSimpleEventInvite.h */; };
+		5BDBF4D214AB8A7A00EBB0E9 /* SFSimpleEventInvite.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4C214AB8A7A00EBB0E9 /* SFSimpleEventInvite.m */; };
+		5BDBF4D314AB8A7A00EBB0E9 /* SFSimplePost.h in Headers */ = {isa = PBXBuildFile; fileRef = 5BDBF4C314AB8A7A00EBB0E9 /* SFSimplePost.h */; };
+		5BDBF4D414AB8A7A00EBB0E9 /* SFSimplePost.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4C414AB8A7A00EBB0E9 /* SFSimplePost.m */; };
+		5BDBF4D514AB8A7A00EBB0E9 /* SFUser.h in Headers */ = {isa = PBXBuildFile; fileRef = 5BDBF4C514AB8A7A00EBB0E9 /* SFUser.h */; };
+		5BDBF4D614AB8A7A00EBB0E9 /* SFUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4C614AB8A7A00EBB0E9 /* SFUser.m */; };
+		5BDBF4D714AB8A7A00EBB0E9 /* SFFacebookRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 5BDBF4C714AB8A7A00EBB0E9 /* SFFacebookRequest.h */; };
+		5BDBF4D814AB8A7A00EBB0E9 /* SFFacebookRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4C814AB8A7A00EBB0E9 /* SFFacebookRequest.m */; };
+		5BDBF4D914AB8A7A00EBB0E9 /* SFSocialFacebook.h in Headers */ = {isa = PBXBuildFile; fileRef = 5BDBF4C914AB8A7A00EBB0E9 /* SFSocialFacebook.h */; };
+		5BDBF4DA14AB8A7A00EBB0E9 /* SFSocialFacebook.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4CA14AB8A7A00EBB0E9 /* SFSocialFacebook.m */; };
+		5BDBF4DB14AB8A7A00EBB0E9 /* SFURLRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 5BDBF4CB14AB8A7A00EBB0E9 /* SFURLRequest.h */; };
+		5BDBF4DC14AB8A7A00EBB0E9 /* SFURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4CC14AB8A7A00EBB0E9 /* SFURLRequest.m */; };
 		AA747D9F0F9514B9006C5449 /* facebook_ios_sdk_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = AA747D9E0F9514B9006C5449 /* facebook_ios_sdk_Prefix.pch */; };
 		AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACBBE490F95108600F1A2B1 /* Foundation.framework */; };
 		AEA93B0A11D5293B000A4545 /* FBConnect.h in Headers */ = {isa = PBXBuildFile; fileRef = AEA93B0111D5293B000A4545 /* FBConnect.h */; };
@@ -73,6 +89,22 @@
 		5BDBF3F614AB84A700EBB0E9 /* SBJsonUTF8Stream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonUTF8Stream.m; sourceTree = "<group>"; };
 		5BDBF3F714AB84A700EBB0E9 /* SBJsonWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonWriter.h; sourceTree = "<group>"; };
 		5BDBF3F814AB84A700EBB0E9 /* SBJsonWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonWriter.m; sourceTree = "<group>"; };
+		5BDBF4BD14AB8A7A00EBB0E9 /* SFAuthorization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFAuthorization.h; sourceTree = "<group>"; };
+		5BDBF4BE14AB8A7A00EBB0E9 /* SFAuthorization.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFAuthorization.m; sourceTree = "<group>"; };
+		5BDBF4BF14AB8A7A00EBB0E9 /* SFSimpleEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFSimpleEvent.h; sourceTree = "<group>"; };
+		5BDBF4C014AB8A7A00EBB0E9 /* SFSimpleEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFSimpleEvent.m; sourceTree = "<group>"; };
+		5BDBF4C114AB8A7A00EBB0E9 /* SFSimpleEventInvite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFSimpleEventInvite.h; sourceTree = "<group>"; };
+		5BDBF4C214AB8A7A00EBB0E9 /* SFSimpleEventInvite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFSimpleEventInvite.m; sourceTree = "<group>"; };
+		5BDBF4C314AB8A7A00EBB0E9 /* SFSimplePost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFSimplePost.h; sourceTree = "<group>"; };
+		5BDBF4C414AB8A7A00EBB0E9 /* SFSimplePost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFSimplePost.m; sourceTree = "<group>"; };
+		5BDBF4C514AB8A7A00EBB0E9 /* SFUser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFUser.h; sourceTree = "<group>"; };
+		5BDBF4C614AB8A7A00EBB0E9 /* SFUser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFUser.m; sourceTree = "<group>"; };
+		5BDBF4C714AB8A7A00EBB0E9 /* SFFacebookRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFFacebookRequest.h; sourceTree = "<group>"; };
+		5BDBF4C814AB8A7A00EBB0E9 /* SFFacebookRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFFacebookRequest.m; sourceTree = "<group>"; };
+		5BDBF4C914AB8A7A00EBB0E9 /* SFSocialFacebook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFSocialFacebook.h; sourceTree = "<group>"; };
+		5BDBF4CA14AB8A7A00EBB0E9 /* SFSocialFacebook.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFSocialFacebook.m; sourceTree = "<group>"; };
+		5BDBF4CB14AB8A7A00EBB0E9 /* SFURLRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFURLRequest.h; sourceTree = "<group>"; };
+		5BDBF4CC14AB8A7A00EBB0E9 /* SFURLRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFURLRequest.m; sourceTree = "<group>"; };
 		AA747D9E0F9514B9006C5449 /* facebook_ios_sdk_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = facebook_ios_sdk_Prefix.pch; sourceTree = SOURCE_ROOT; };
 		AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		AE3FC32211F19C18001C05F3 /* FBDialog.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = FBDialog.bundle; sourceTree = "<group>"; };
@@ -112,6 +144,7 @@
 			isa = PBXGroup;
 			children = (
 				08FB77AEFE84172EC02AAC07 /* FBConnect */,
+				5BDBF4BB14AB8A7A00EBB0E9 /* SFSocialFacebook */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				0867D69AFE84028FC02AAC07 /* Frameworks */,
 				034768DFFF38A50411DB9C8B /* Products */,
@@ -187,6 +220,37 @@
 			path = ../SBJson/Classes;
 			sourceTree = "<group>";
 		};
+		5BDBF4BB14AB8A7A00EBB0E9 /* SFSocialFacebook */ = {
+			isa = PBXGroup;
+			children = (
+				5BDBF4BC14AB8A7A00EBB0E9 /* Models */,
+				5BDBF4C714AB8A7A00EBB0E9 /* SFFacebookRequest.h */,
+				5BDBF4C814AB8A7A00EBB0E9 /* SFFacebookRequest.m */,
+				5BDBF4C914AB8A7A00EBB0E9 /* SFSocialFacebook.h */,
+				5BDBF4CA14AB8A7A00EBB0E9 /* SFSocialFacebook.m */,
+				5BDBF4CB14AB8A7A00EBB0E9 /* SFURLRequest.h */,
+				5BDBF4CC14AB8A7A00EBB0E9 /* SFURLRequest.m */,
+			);
+			path = SFSocialFacebook;
+			sourceTree = "<group>";
+		};
+		5BDBF4BC14AB8A7A00EBB0E9 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				5BDBF4BD14AB8A7A00EBB0E9 /* SFAuthorization.h */,
+				5BDBF4BE14AB8A7A00EBB0E9 /* SFAuthorization.m */,
+				5BDBF4BF14AB8A7A00EBB0E9 /* SFSimpleEvent.h */,
+				5BDBF4C014AB8A7A00EBB0E9 /* SFSimpleEvent.m */,
+				5BDBF4C114AB8A7A00EBB0E9 /* SFSimpleEventInvite.h */,
+				5BDBF4C214AB8A7A00EBB0E9 /* SFSimpleEventInvite.m */,
+				5BDBF4C314AB8A7A00EBB0E9 /* SFSimplePost.h */,
+				5BDBF4C414AB8A7A00EBB0E9 /* SFSimplePost.m */,
+				5BDBF4C514AB8A7A00EBB0E9 /* SFUser.h */,
+				5BDBF4C614AB8A7A00EBB0E9 /* SFUser.m */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -214,6 +278,14 @@
 				5BDBF40D14AB84A700EBB0E9 /* SBJsonTokeniser.h in Headers */,
 				5BDBF40F14AB84A700EBB0E9 /* SBJsonUTF8Stream.h in Headers */,
 				5BDBF41114AB84A700EBB0E9 /* SBJsonWriter.h in Headers */,
+				5BDBF4CD14AB8A7A00EBB0E9 /* SFAuthorization.h in Headers */,
+				5BDBF4CF14AB8A7A00EBB0E9 /* SFSimpleEvent.h in Headers */,
+				5BDBF4D114AB8A7A00EBB0E9 /* SFSimpleEventInvite.h in Headers */,
+				5BDBF4D314AB8A7A00EBB0E9 /* SFSimplePost.h in Headers */,
+				5BDBF4D514AB8A7A00EBB0E9 /* SFUser.h in Headers */,
+				5BDBF4D714AB8A7A00EBB0E9 /* SFFacebookRequest.h in Headers */,
+				5BDBF4D914AB8A7A00EBB0E9 /* SFSocialFacebook.h in Headers */,
+				5BDBF4DB14AB8A7A00EBB0E9 /* SFURLRequest.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -280,6 +352,14 @@
 				5BDBF40E14AB84A700EBB0E9 /* SBJsonTokeniser.m in Sources */,
 				5BDBF41014AB84A700EBB0E9 /* SBJsonUTF8Stream.m in Sources */,
 				5BDBF41214AB84A700EBB0E9 /* SBJsonWriter.m in Sources */,
+				5BDBF4CE14AB8A7A00EBB0E9 /* SFAuthorization.m in Sources */,
+				5BDBF4D014AB8A7A00EBB0E9 /* SFSimpleEvent.m in Sources */,
+				5BDBF4D214AB8A7A00EBB0E9 /* SFSimpleEventInvite.m in Sources */,
+				5BDBF4D414AB8A7A00EBB0E9 /* SFSimplePost.m in Sources */,
+				5BDBF4D614AB8A7A00EBB0E9 /* SFUser.m in Sources */,
+				5BDBF4D814AB8A7A00EBB0E9 /* SFFacebookRequest.m in Sources */,
+				5BDBF4DA14AB8A7A00EBB0E9 /* SFSocialFacebook.m in Sources */,
+				5BDBF4DC14AB8A7A00EBB0E9 /* SFURLRequest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

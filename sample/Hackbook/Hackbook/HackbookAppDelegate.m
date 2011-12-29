@@ -33,6 +33,8 @@ static NSString* kAppId = @"210849718975311";
 
 @synthesize facebook;
 
+@synthesize socialFacebook = _socialFacebook;
+
 @synthesize apiData;
 
 @synthesize userPermissions;
@@ -53,6 +55,8 @@ static NSString* kAppId = @"210849718975311";
     // Initialize Facebook
     facebook = [[Facebook alloc] initWithAppId:kAppId andDelegate:rootViewController];
     
+    _socialFacebook = [[SFSocialFacebook alloc] initWithAppId:@"198801296855729" appSecret:@"abe6ebce8a657c18c748887d9d480265" andDelegate:nil];
+    
     // Initialize API data (for views, etc.)
     apiData = [[DataSet alloc] init];
     
@@ -64,70 +68,73 @@ static NSString* kAppId = @"210849718975311";
     self.window.rootViewController = self.navigationController;
     [self.window makeKeyAndVisible];
     
-    // Check App ID:
-    // This is really a warning for the developer, this should not
-    // happen in a completed app
-    if (!kAppId) {
-        UIAlertView *alertView = [[UIAlertView alloc] 
-                                  initWithTitle:@"Setup Error" 
-                                  message:@"Missing app ID. You cannot run the app until you provide this in the code." 
-                                  delegate:self 
-                                  cancelButtonTitle:@"OK" 
-                                  otherButtonTitles:nil, 
-                                  nil];
-        [alertView show];
-        [alertView release];
-    } else {
-        // Now check that the URL scheme fb[app_id]://authorize is in the .plist and can
-        // be opened, doing a simple check without local app id factored in here
-        NSString *url = [NSString stringWithFormat:@"fb%@://authorize",kAppId];
-        BOOL bSchemeInPlist = NO; // find out if the sceme is in the plist file.
-        NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
-        if ([aBundleURLTypes isKindOfClass:[NSArray class]] && 
-            ([aBundleURLTypes count] > 0)) {
-            NSDictionary* aBundleURLTypes0 = [aBundleURLTypes objectAtIndex:0];
-            if ([aBundleURLTypes0 isKindOfClass:[NSDictionary class]]) {
-                NSArray* aBundleURLSchemes = [aBundleURLTypes0 objectForKey:@"CFBundleURLSchemes"];
-                if ([aBundleURLSchemes isKindOfClass:[NSArray class]] &&
-                    ([aBundleURLSchemes count] > 0)) {
-                    NSString *scheme = [aBundleURLSchemes objectAtIndex:0];
-                    if ([scheme isKindOfClass:[NSString class]] && 
-                        [url hasPrefix:scheme]) {
-                        bSchemeInPlist = YES;
-                    }
-                }
-            }
-        }
-        // Check if the authorization callback will work
-        BOOL bCanOpenUrl = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString: url]];
-        if (!bSchemeInPlist || !bCanOpenUrl) {
-            UIAlertView *alertView = [[UIAlertView alloc] 
-                                      initWithTitle:@"Setup Error" 
-                                      message:@"Invalid or missing URL scheme. You cannot run the app until you set up a valid URL scheme in your .plist." 
-                                      delegate:self 
-                                      cancelButtonTitle:@"OK" 
-                                      otherButtonTitles:nil, 
-                                      nil];
-            [alertView show];
-            [alertView release];
-        }
-    }
+//    // Check App ID:
+//    // This is really a warning for the developer, this should not
+//    // happen in a completed app
+//    if (!kAppId) {
+//        UIAlertView *alertView = [[UIAlertView alloc] 
+//                                  initWithTitle:@"Setup Error" 
+//                                  message:@"Missing app ID. You cannot run the app until you provide this in the code." 
+//                                  delegate:self 
+//                                  cancelButtonTitle:@"OK" 
+//                                  otherButtonTitles:nil, 
+//                                  nil];
+//        [alertView show];
+//        [alertView release];
+//    } else {
+//        // Now check that the URL scheme fb[app_id]://authorize is in the .plist and can
+//        // be opened, doing a simple check without local app id factored in here
+//        NSString *url = [NSString stringWithFormat:@"fb%@://authorize",kAppId];
+//        BOOL bSchemeInPlist = NO; // find out if the sceme is in the plist file.
+//        NSArray* aBundleURLTypes = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleURLTypes"];
+//        if ([aBundleURLTypes isKindOfClass:[NSArray class]] && 
+//            ([aBundleURLTypes count] > 0)) {
+//            NSDictionary* aBundleURLTypes0 = [aBundleURLTypes objectAtIndex:0];
+//            if ([aBundleURLTypes0 isKindOfClass:[NSDictionary class]]) {
+//                NSArray* aBundleURLSchemes = [aBundleURLTypes0 objectForKey:@"CFBundleURLSchemes"];
+//                if ([aBundleURLSchemes isKindOfClass:[NSArray class]] &&
+//                    ([aBundleURLSchemes count] > 0)) {
+//                    NSString *scheme = [aBundleURLSchemes objectAtIndex:0];
+//                    if ([scheme isKindOfClass:[NSString class]] && 
+//                        [url hasPrefix:scheme]) {
+//                        bSchemeInPlist = YES;
+//                    }
+//                }
+//            }
+//        }
+//        // Check if the authorization callback will work
+//        BOOL bCanOpenUrl = [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString: url]];
+//        if (!bSchemeInPlist || !bCanOpenUrl) {
+//            UIAlertView *alertView = [[UIAlertView alloc] 
+//                                      initWithTitle:@"Setup Error" 
+//                                      message:@"Invalid or missing URL scheme. You cannot run the app until you set up a valid URL scheme in your .plist." 
+//                                      delegate:self 
+//                                      cancelButtonTitle:@"OK" 
+//                                      otherButtonTitles:nil, 
+//                                      nil];
+//            [alertView show];
+//            [alertView release];
+//        }
+//    }
     
     return YES;
 }
 
+// Pre 4.2 support
 - (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
-    return [self.facebook handleOpenURL:url];
+    return [_socialFacebook handleOpenURL:url];
 }
 
+// For 4.2+ support
 - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
-    return [self.facebook handleOpenURL:url];
+    return [_socialFacebook handleOpenURL:url];
 }
 
 - (void)dealloc {
     [_window release];
     [_navigationController release];
     [facebook release];
+    [_socialFacebook release];
     [apiData release];
     [userPermissions release];
     [super dealloc];

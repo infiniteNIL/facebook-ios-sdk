@@ -195,6 +195,12 @@
                                     @"Upload video", @"button",
                                     @"apiGraphUserVideosPost", @"method",
                                     nil];
+        NSDictionary *graphMenu7 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                    @"Show user feeds",@"title", 
+                                    @"You can show all feeds from user's wall.",@"description",
+                                    @"Show feeds",@"button",
+                                    @"apiGraphUserFeeds",@"method",
+                                    nil];
 
 
         NSArray *graphMenuItems = [[NSArray alloc] initWithObjects:
@@ -204,6 +210,7 @@
                                    graphMenu4,
                                    graphMenu5,
                                    graphMenu6,
+                                   graphMenu7,
                                    nil];
 
         NSDictionary *graphConfigData = [[NSDictionary alloc] initWithObjectsAndKeys:

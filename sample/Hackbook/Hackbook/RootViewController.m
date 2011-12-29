@@ -60,10 +60,10 @@
                                    @"SELECT uid, name, pic FROM user WHERE uid=me()", @"query",
                                    nil];
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] requestWithMethodName:@"fql.query"
-                          andParams:params
-                      andHttpMethod:@"POST"
-                        andDelegate:self];
+//    [[delegate facebook] requestWithMethodName:@"fql.query"
+//                          andParams:params
+//                      andHttpMethod:@"POST"
+//                        andDelegate:self];
 }
 
 - (void)apiGraphUserPermissions {
@@ -112,8 +112,18 @@
  */
 - (void)login {
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    if (![[delegate facebook] isSessionValid]) {
-        [[delegate facebook] authorize:permissions];
+//    if (![[delegate facebook] isSessionValid]) {
+//        [[delegate facebook] authorize:permissions];
+//    } else {
+//        [self showLoggedIn];
+//    }
+    if (![[delegate socialFacebook] isSessionValid]) {
+        [[delegate socialFacebook] loginWithSuccess:^{
+            [self showLoggedIn];
+        } 
+                                            failure:^(BOOL cancelled) {
+                                                NSLog(@"did not login");
+                                            }];
     } else {
         [self showLoggedIn];
     }
@@ -124,7 +134,11 @@
  */
 - (void)logout {
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    [[delegate facebook] logout];
+//    [[delegate facebook] logout];
+    [[delegate socialFacebook] logoutWithSuccess:^{
+        pendingApiCallsController = nil;
+        [self showLoggedOut];
+    }];
 }
 
 /**
@@ -152,12 +166,14 @@
     self.view = view;
     [view release];
 
+    HackbookAppDelegate *delegate = (HackbookAppDelegate *) [[UIApplication sharedApplication] delegate];
     // Initialize permissions
-    permissions = [[NSArray alloc] initWithObjects:@"offline_access", nil];
+//    permissions = [[NSArray alloc] initWithObjects:@"offline_access", nil];
+    [[delegate socialFacebook] setPermissions:[NSArray arrayWithObjects:@"offline_access", nil]];
 
     // Main menu items
     mainMenuItems = [[NSMutableArray alloc] initWithCapacity:1];
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
+//    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
     NSArray *apiInfo = [[delegate apiData] apiConfigData];
     for (NSUInteger i=0; i < [apiInfo count]; i++) {
         [mainMenuItems addObject:[[apiInfo objectAtIndex:i] objectForKey:@"title"]];
@@ -245,19 +261,24 @@
     [super viewWillAppear:animated];
 
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-    // Check and retrieve authorization information
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    if ([defaults objectForKey:@"FBAccessTokenKey"]
-        && [defaults objectForKey:@"FBExpirationDateKey"]) {
-        [delegate facebook].accessToken = [defaults objectForKey:@"FBAccessTokenKey"];
-        [delegate facebook].expirationDate = [defaults objectForKey:@"FBExpirationDateKey"];
-    }
-    if (![[delegate facebook] isSessionValid]) {
+//    // Check and retrieve authorization information
+//    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+//    if ([defaults objectForKey:@"FBAccessTokenKey"]
+//        && [defaults objectForKey:@"FBExpirationDateKey"]) {
+//        [delegate facebook].accessToken = [defaults objectForKey:@"FBAccessTokenKey"];
+//        [delegate facebook].expirationDate = [defaults objectForKey:@"FBExpirationDateKey"];
+//    }
+//    if (![[delegate facebook] isSessionValid]) {
+//        [self showLoggedOut];
+//    } else {
+//        [self showLoggedIn];
+//    }
+    if (![[delegate socialFacebook] isSessionValid]) {
         [self showLoggedOut];
     } else {
         [self showLoggedIn];
     }
-
+    
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -315,62 +336,62 @@
 
 }
 
-#pragma mark - FBSessionDelegate Methods
-/**
- * Called when the user has logged in successfully.
- */
-- (void)fbDidLogin {
-    [self showLoggedIn];
-
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-
-    // Save authorization information
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:[[delegate facebook] accessToken] forKey:@"FBAccessTokenKey"];
-    [defaults setObject:[[delegate facebook] expirationDate] forKey:@"FBExpirationDateKey"];
-    [defaults synchronize];
-    
-    [pendingApiCallsController userDidGrantPermission];
-}
-
-/**
- * Called when the user canceled the authorization dialog.
- */
--(void)fbDidNotLogin:(BOOL)cancelled {
-    [pendingApiCallsController userDidNotGrantPermission];
-}
-
-/**
- * Called when the request logout has succeeded.
- */
-- (void)fbDidLogout {
-    pendingApiCallsController = nil;
-
-    // Remove saved authorization information if it exists and it is
-    // ok to clear it (logout, session invalid, app unauthorized)
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults removeObjectForKey:@"FBAccessTokenKey"];
-    [defaults removeObjectForKey:@"FBExpirationDateKey"];
-    [defaults synchronize];
-
-    [self showLoggedOut];
-}
-
-/**
- * Called when the session has expired.
- */
-- (void)fbSessionInvalidated {   
-    UIAlertView *alertView = [[UIAlertView alloc]
-                              initWithTitle:@"Auth Exception" 
-                              message:@"Your session has expired." 
-                              delegate:nil 
-                              cancelButtonTitle:@"OK" 
-                              otherButtonTitles:nil, 
-                              nil];
-    [alertView show];
-    [alertView release];
-    [self fbDidLogout];
-}
+//#pragma mark - FBSessionDelegate Methods
+///**
+// * Called when the user has logged in successfully.
+// */
+//- (void)fbDidLogin {
+//    [self showLoggedIn];
+//
+//    HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
+//
+//    // Save authorization information
+//    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+//    [defaults setObject:[[delegate facebook] accessToken] forKey:@"FBAccessTokenKey"];
+//    [defaults setObject:[[delegate facebook] expirationDate] forKey:@"FBExpirationDateKey"];
+//    [defaults synchronize];
+//    
+//    [pendingApiCallsController userDidGrantPermission];
+//}
+//
+///**
+// * Called when the user canceled the authorization dialog.
+// */
+//-(void)fbDidNotLogin:(BOOL)cancelled {
+//    [pendingApiCallsController userDidNotGrantPermission];
+//}
+//
+///**
+// * Called when the request logout has succeeded.
+// */
+//- (void)fbDidLogout {
+//    pendingApiCallsController = nil;
+//
+//    // Remove saved authorization information if it exists and it is
+//    // ok to clear it (logout, session invalid, app unauthorized)
+//    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+//    [defaults removeObjectForKey:@"FBAccessTokenKey"];
+//    [defaults removeObjectForKey:@"FBExpirationDateKey"];
+//    [defaults synchronize];
+//
+//    [self showLoggedOut];
+//}
+//
+///**
+// * Called when the session has expired.
+// */
+//- (void)fbSessionInvalidated {   
+//    UIAlertView *alertView = [[UIAlertView alloc]
+//                              initWithTitle:@"Auth Exception" 
+//                              message:@"Your session has expired." 
+//                              delegate:nil 
+//                              cancelButtonTitle:@"OK" 
+//                              otherButtonTitles:nil, 
+//                              nil];
+//    [alertView show];
+//    [alertView release];
+//    [self fbDidLogout];
+//}
 
 #pragma mark - FBRequestDelegate Methods
 /**

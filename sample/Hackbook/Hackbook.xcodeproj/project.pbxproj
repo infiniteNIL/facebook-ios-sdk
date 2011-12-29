@@ -44,6 +44,14 @@
 		5BDBF43B14AB879500EBB0E9 /* SBJsonTokeniser.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF42D14AB879500EBB0E9 /* SBJsonTokeniser.m */; };
 		5BDBF43C14AB879500EBB0E9 /* SBJsonUTF8Stream.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF42F14AB879500EBB0E9 /* SBJsonUTF8Stream.m */; };
 		5BDBF43D14AB879500EBB0E9 /* SBJsonWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF43114AB879500EBB0E9 /* SBJsonWriter.m */; };
+		5BDBF4F314AB8AAD00EBB0E9 /* SFAuthorization.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4E414AB8AAD00EBB0E9 /* SFAuthorization.m */; };
+		5BDBF4F414AB8AAD00EBB0E9 /* SFSimpleEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4E614AB8AAD00EBB0E9 /* SFSimpleEvent.m */; };
+		5BDBF4F514AB8AAD00EBB0E9 /* SFSimpleEventInvite.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4E814AB8AAD00EBB0E9 /* SFSimpleEventInvite.m */; };
+		5BDBF4F614AB8AAD00EBB0E9 /* SFSimplePost.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4EA14AB8AAD00EBB0E9 /* SFSimplePost.m */; };
+		5BDBF4F714AB8AAD00EBB0E9 /* SFUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4EC14AB8AAD00EBB0E9 /* SFUser.m */; };
+		5BDBF4F814AB8AAD00EBB0E9 /* SFFacebookRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4EE14AB8AAD00EBB0E9 /* SFFacebookRequest.m */; };
+		5BDBF4F914AB8AAD00EBB0E9 /* SFSocialFacebook.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4F014AB8AAD00EBB0E9 /* SFSocialFacebook.m */; };
+		5BDBF4FA14AB8AAD00EBB0E9 /* SFURLRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BDBF4F214AB8AAD00EBB0E9 /* SFURLRequest.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -111,6 +119,22 @@
 		5BDBF42F14AB879500EBB0E9 /* SBJsonUTF8Stream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SBJsonUTF8Stream.m; path = ../../SBJson/Classes/SBJsonUTF8Stream.m; sourceTree = "<group>"; };
 		5BDBF43014AB879500EBB0E9 /* SBJsonWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SBJsonWriter.h; path = ../../SBJson/Classes/SBJsonWriter.h; sourceTree = "<group>"; };
 		5BDBF43114AB879500EBB0E9 /* SBJsonWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SBJsonWriter.m; path = ../../SBJson/Classes/SBJsonWriter.m; sourceTree = "<group>"; };
+		5BDBF4E314AB8AAD00EBB0E9 /* SFAuthorization.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFAuthorization.h; sourceTree = "<group>"; };
+		5BDBF4E414AB8AAD00EBB0E9 /* SFAuthorization.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFAuthorization.m; sourceTree = "<group>"; };
+		5BDBF4E514AB8AAD00EBB0E9 /* SFSimpleEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFSimpleEvent.h; sourceTree = "<group>"; };
+		5BDBF4E614AB8AAD00EBB0E9 /* SFSimpleEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFSimpleEvent.m; sourceTree = "<group>"; };
+		5BDBF4E714AB8AAD00EBB0E9 /* SFSimpleEventInvite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFSimpleEventInvite.h; sourceTree = "<group>"; };
+		5BDBF4E814AB8AAD00EBB0E9 /* SFSimpleEventInvite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFSimpleEventInvite.m; sourceTree = "<group>"; };
+		5BDBF4E914AB8AAD00EBB0E9 /* SFSimplePost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFSimplePost.h; sourceTree = "<group>"; };
+		5BDBF4EA14AB8AAD00EBB0E9 /* SFSimplePost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFSimplePost.m; sourceTree = "<group>"; };
+		5BDBF4EB14AB8AAD00EBB0E9 /* SFUser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFUser.h; sourceTree = "<group>"; };
+		5BDBF4EC14AB8AAD00EBB0E9 /* SFUser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFUser.m; sourceTree = "<group>"; };
+		5BDBF4ED14AB8AAD00EBB0E9 /* SFFacebookRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFFacebookRequest.h; sourceTree = "<group>"; };
+		5BDBF4EE14AB8AAD00EBB0E9 /* SFFacebookRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFFacebookRequest.m; sourceTree = "<group>"; };
+		5BDBF4EF14AB8AAD00EBB0E9 /* SFSocialFacebook.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFSocialFacebook.h; sourceTree = "<group>"; };
+		5BDBF4F014AB8AAD00EBB0E9 /* SFSocialFacebook.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFSocialFacebook.m; sourceTree = "<group>"; };
+		5BDBF4F114AB8AAD00EBB0E9 /* SFURLRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFURLRequest.h; sourceTree = "<group>"; };
+		5BDBF4F214AB8AAD00EBB0E9 /* SFURLRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFURLRequest.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +165,7 @@
 			children = (
 				30EA73CC13F5D50D003DC0D2 /* FBConnect */,
 				30EA73CA13F5D502003DC0D2 /* FBConnect.bundle */,
+				5BDBF4E114AB8AAD00EBB0E9 /* SFSocialFacebook */,
 				30EA736313F5D21B003DC0D2 /* Hackbook */,
 				30EA735C13F5D21B003DC0D2 /* Frameworks */,
 				30EA735A13F5D21B003DC0D2 /* Products */,
@@ -255,6 +280,38 @@
 			path = ../../src/JSON;
 			sourceTree = "<group>";
 		};
+		5BDBF4E114AB8AAD00EBB0E9 /* SFSocialFacebook */ = {
+			isa = PBXGroup;
+			children = (
+				5BDBF4E214AB8AAD00EBB0E9 /* Models */,
+				5BDBF4ED14AB8AAD00EBB0E9 /* SFFacebookRequest.h */,
+				5BDBF4EE14AB8AAD00EBB0E9 /* SFFacebookRequest.m */,
+				5BDBF4EF14AB8AAD00EBB0E9 /* SFSocialFacebook.h */,
+				5BDBF4F014AB8AAD00EBB0E9 /* SFSocialFacebook.m */,
+				5BDBF4F114AB8AAD00EBB0E9 /* SFURLRequest.h */,
+				5BDBF4F214AB8AAD00EBB0E9 /* SFURLRequest.m */,
+			);
+			name = SFSocialFacebook;
+			path = ../../src/SFSocialFacebook;
+			sourceTree = "<group>";
+		};
+		5BDBF4E214AB8AAD00EBB0E9 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				5BDBF4E314AB8AAD00EBB0E9 /* SFAuthorization.h */,
+				5BDBF4E414AB8AAD00EBB0E9 /* SFAuthorization.m */,
+				5BDBF4E514AB8AAD00EBB0E9 /* SFSimpleEvent.h */,
+				5BDBF4E614AB8AAD00EBB0E9 /* SFSimpleEvent.m */,
+				5BDBF4E714AB8AAD00EBB0E9 /* SFSimpleEventInvite.h */,
+				5BDBF4E814AB8AAD00EBB0E9 /* SFSimpleEventInvite.m */,
+				5BDBF4E914AB8AAD00EBB0E9 /* SFSimplePost.h */,
+				5BDBF4EA14AB8AAD00EBB0E9 /* SFSimplePost.m */,
+				5BDBF4EB14AB8AAD00EBB0E9 /* SFUser.h */,
+				5BDBF4EC14AB8AAD00EBB0E9 /* SFUser.m */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -348,6 +405,14 @@
 				5BDBF43B14AB879500EBB0E9 /* SBJsonTokeniser.m in Sources */,
 				5BDBF43C14AB879500EBB0E9 /* SBJsonUTF8Stream.m in Sources */,
 				5BDBF43D14AB879500EBB0E9 /* SBJsonWriter.m in Sources */,
+				5BDBF4F314AB8AAD00EBB0E9 /* SFAuthorization.m in Sources */,
+				5BDBF4F414AB8AAD00EBB0E9 /* SFSimpleEvent.m in Sources */,
+				5BDBF4F514AB8AAD00EBB0E9 /* SFSimpleEventInvite.m in Sources */,
+				5BDBF4F614AB8AAD00EBB0E9 /* SFSimplePost.m in Sources */,
+				5BDBF4F714AB8AAD00EBB0E9 /* SFUser.m in Sources */,
+				5BDBF4F814AB8AAD00EBB0E9 /* SFFacebookRequest.m in Sources */,
+				5BDBF4F914AB8AAD00EBB0E9 /* SFSocialFacebook.m in Sources */,
+				5BDBF4FA14AB8AAD00EBB0E9 /* SFURLRequest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
