@@ -41,7 +41,8 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
             connection = _connection,
             responseText = _responseText,
             state = _state,
-            error = _error;
+            error = _error,
+            customAttributes = _customAttributes;
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // class public
 
@@ -316,6 +317,21 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
 }
 
 /**
+ * cancel request
+ */
+- (void)cancel {
+    [_connection cancel];
+    self.responseText = nil;
+    self.connection = nil;
+    
+    if ([_delegate respondsToSelector:@selector(requestDidCancel:)]) {
+        [_delegate requestDidCancel:self];
+    }
+    
+    self.state = kFBRequestStateCancelled;
+}
+
+/**
  * Free internal structure
  */
 - (void)dealloc {
@@ -325,6 +341,7 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
   [_url release];
   [_httpMethod release];
   [_params release];
+  [_customAttributes release];
   [super dealloc];
 }
 

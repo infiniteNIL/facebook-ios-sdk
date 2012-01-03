@@ -31,12 +31,18 @@ typedef enum {
     SFAPICallListFeeds,
 } SFAPICall;
 
+static NSString* kSFFBRequestAttributeAPICall = @"apiCall";
+static NSString* kSFFBRequestAttributeSuccess = @"success";
+static NSString* kSFFBRequestAttributeFailure = @"failure";
+static NSString* kSFFBRequestAttributeCancel = @"cancel";
+
 
 @interface SFSocialFacebook (Private)
 
+- (id)initWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix;
+
 - (void)getAppAccessTokenWithSuccess:(SFAppLoginBlock)successBlock failure:(SFFailureBlock)failureBlock;
 - (void)cancelPendingRequest;
-- (void)releaseRequestObjects;
 - (NSError *)errorWithDescription:(NSString *)description;
 - (void)clearUserInfo;
 
@@ -45,6 +51,9 @@ typedef enum {
 
 @implementation SFSocialFacebook
 
+@synthesize appId = _appId;
+@synthesize appSecret = _appSecret;
+
 @synthesize delegate = _delegate;
 @synthesize permissions = _permissions;
 
@@ -52,19 +61,68 @@ typedef enum {
 @synthesize facebookUserId;
 @synthesize loggedUserId;
 
+#pragma mark - Singleton implementation
 
-//static SFSocialFacebook *_instance;
+// According http://developer.apple.com/library/mac/documentation/Cocoa/Conceptual/CocoaFundamentals/CocoaObjects/CocoaObjects.html#//apple_ref/doc/uid/TP40002974-CH4-SW32
 
-- (id)initWithAppId:(NSString *)appId appSecret:(NSString *)appSecret andDelegate:(id<SFPostDatasource>)delegate
+static SFSocialFacebook *_instance;
+
++ (SFSocialFacebook *)sharedInstance
 {
-    self = [self initWithAppId:appId appSecret:appSecret urlSchemeSuffix:nil andDelegate:delegate];
+    if (_instance == nil) {
+        @throw [NSException exceptionWithName:@"SFSocialFacebook Exception" reason:@"There is no singleton instance" userInfo:nil];
+    }
+    
+    return _instance;
+}
+
++ (SFSocialFacebook *)sharedInstanceWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix
+{
+	@synchronized(self) {
+        if (_instance == nil) {
+            _instance = [[super allocWithZone:NULL] initWithAppId:appId appSecret:appSecret urlSchemeSuffix:urlSchemeSuffix];
+        }
+    }
+    return _instance;
+}
+
++ (id)allocWithZone:(NSZone *)zone
+{
+    return [self sharedInstance];
+}
+
+- (id)copyWithZone:(NSZone *)zone
+{
     return self;
 }
 
-- (id)initWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix andDelegate:(id<SFPostDatasource>)delegate
+- (id)retain
+{
+    return self;
+}
+
+- (NSUInteger)retainCount
+{
+    return NSUIntegerMax;
+}
+
+- (void)release
+{
+    // do nothing
+}
+
+- (id)autorelease
+{
+    return self;
+}
+
+#pragma mark -
+
+- (id)initWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix
 {
     self = [super init];
     if (self) {
+        _fbRequests = [[NSMutableArray alloc] init];
         
         // Check App ID:
         // This is really a warning for the developer, this should not
@@ -168,49 +226,44 @@ typedef enum {
     return [_facebook isSessionValid];
 }
 
-- (void)listFeedsFromUser:(NSString *)userId 
-                 pageSize:(int)postsPerPage 
-                  success:(SFFeedsBlock)successBlock 
-                  failure:(SFFailureBlock)failureBlock 
-                   cancel:(SFBasicBlock)cancelBlock
+- (void)listProfileFeed:(NSString *)profileId pageSize:(int)postsPerPage success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    [self listProfileFeedNextPage:[NSString stringWithFormat:@"%@/feed?date_format=U&limit=%d", profileId, postsPerPage] success:successBlock failure:failureBlock cancel:cancelBlock];
+}
+
+- (void)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     if (!_appAccessToken || ![_facebook isSessionValid]) {
         [self getAppAccessTokenWithSuccess:^(NSString *accessToken) {
             _appAccessToken = accessToken;
-            [self listFeedsFromUser:userId 
-                           pageSize:postsPerPage 
-                            success:successBlock 
-                            failure:failureBlock 
-                             cancel:cancelBlock];
+            [self listProfileFeedNextPage:nextPageURL success:successBlock failure:failureBlock cancel:cancelBlock];
         }
                                    failure:failureBlock];
     } else {
-        
-        [self cancelPendingRequest];
-        
-//        NSString *baseTime = [[NSString stringWithFormat:@"%d", (long)[[NSDate date] timeIntervalSince1970]] retain];
-//        auxFeedsLastPost = NO;
-        _currentAPICall = SFAPICallListFeeds;
-        _successBlock = [successBlock copy];
-        _failureBlock = [failureBlock copy];
-        _cancelBlock = [cancelBlock copy];
-        
-        NSString *graphPath = [NSString stringWithFormat:@"%@/feed?date_format=U&limit=%d", userId, postsPerPage];
         NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
         if (_appAccessToken) {
             [params setValue:_appAccessToken forKey:@"access_token"];
         }
-        _fbRequest = [[_facebook requestWithGraphPath:graphPath andParams:params andDelegate:self] retain];
+        NSDictionary *customAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:SFAPICallListFeeds], kSFFBRequestAttributeAPICall,
+                                          [[successBlock copy] autorelease], kSFFBRequestAttributeSuccess,
+                                          [[failureBlock copy] autorelease], kSFFBRequestAttributeFailure,
+                                          [[cancelBlock copy] autorelease], kSFFBRequestAttributeCancel,
+                                          nil];
+        
+        FBRequest *request = [_facebook requestWithGraphPath:nextPageURL andParams:params andDelegate:self];
+        
+        [request setCustomAttributes:customAttributes];
+        [customAttributes release];
         [params release];
+        
+        [_fbRequests addObject:request];
     }
 }
 
 #pragma mark - Private
 
-- (void)getAppAccessTokenWithSuccess:(void (^)(NSString *))successBlock failure:(SFFailureBlock)failureBlock
+- (void)getAppAccessTokenWithSuccess:(SFAppLoginBlock)successBlock failure:(SFFailureBlock)failureBlock
 {   
-    [self cancelPendingRequest];
-    
     _urlRequest = [[SFURLRequest alloc] initWithURL:[NSString stringWithFormat:@"https://graph.facebook.com/oauth/access_token?client_id=%@&client_secret=%@&grant_type=client_credentials", _appId, _appSecret] 
                                             success:^(NSData *receivedData) {
                                                 NSString *response = [[NSString alloc] initWithData:receivedData encoding:NSUTF8StringEncoding];
@@ -223,7 +276,7 @@ typedef enum {
                                                     // Success
                                                     accessToken = [components objectAtIndex:1];
                                                     if (successBlock) {
-                                                        ((SFAppLoginBlock)successBlock)(accessToken);
+                                                        successBlock(accessToken);
                                                     }
                                                 } else {
                                                     // Error
@@ -233,56 +286,13 @@ typedef enum {
                                                 }
                                             } 
                                             failure:failureBlock];
-    
-    
-    
-//    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"https://graph.facebook.com/oauth/access_token?client_id=%@&client_secret=%@&grant_type=client_credentials", _appId, _appSecret]]];
-//    _connection =[[NSURLConnection alloc] initWithRequest:request delegate:self];
-//    
-//    if (_connection) {
-//        _receivedData = [[NSMutableData data] retain];
-//        
-//        _currentAPICall = SFAPICallAppLogin;
-//        _successBlock = [successBlock copy];
-//        _failureBlock = [failureBlock copy];
-//        
-//    } 
-//    else if (failureBlock) {
-//        failureBlock([self errorWithDescription:@"Could not create connection"]);
-//    }
 }
 
 - (void)cancelPendingRequest
 {
-    if (_fbRequest) {
-        [[_fbRequest connection] cancel];
+    for (FBRequest *request in _fbRequests) {
+        [request cancel];
     }
-    
-    if (_connection) {
-        [_connection cancel];
-    }
-    
-    if (_cancelBlock) {
-        _cancelBlock();
-    }
-    
-    [self releaseRequestObjects];
-}
-
-- (void)releaseRequestObjects
-{
-    // URL request
-    [_connection release], _connection = nil;
-    [_receivedData release], _receivedData = nil;
-    
-    // Facebook request
-    [_fbRequest release], _fbRequest = nil;
-    
-    // Blocks
-    [_successBlock release], _successBlock = nil;
-    [_failureBlock release], _failureBlock = nil;
-    [_cancelBlock release], _cancelBlock = nil;
-    
 }
 
 - (NSError *)errorWithDescription:(NSString *)description
@@ -355,128 +365,101 @@ typedef enum {
 //    conn = [[NSURLConnection alloc] initWithRequest:[NSURLRequest requestWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:30] delegate:self startImmediately:TRUE];
 //    
 //}
+
+//#pragma mark - NSURLConnectionDataDelegate
 //
+//- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
+//{
+//    // Discard all previously received data.
+//    [_receivedData setLength:0];
+//}
 //
-//+ (SFSocialFacebook *)sharedInstance {
+//- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
+//{
+//    // Append the new data to the receivedData.
+//    [_receivedData appendData:data];     
+//}
+//
+//- (void)connectionDidFinishLoading:(NSURLConnection *)connection
+//{
+//    if (_successBlock || _failureBlock) {
 //    
-//	@synchronized(self) {
+////        NSString *json =  [[[NSString alloc] initWithData:receivedData encoding:NSStringEnumerationByComposedCharacterSequences] autorelease];
+////        NSArray *areaInfo = [json JSONValue];
+////        
+////        if (areaInfo != nil && [areaInfo count] != 0) {
+////            facebookUserId = [[[(NSDictionary *)[areaInfo objectAtIndex:0] objectForKey:@"account_number"] description] retain];
+////            NSLog(@"facebookUserId = %@", facebookUserId);
+////            
+////            NSString* access_token = [(NSDictionary *)[areaInfo objectAtIndex:0] objectForKey:@"access_token"];
+////            if([access_token length] > 0){
+////                authSingleton.token = access_token;
+////                authSingleton.logged = YES;
+////                _facebook.accessToken = access_token;
+////                NSLog(@"auth_token = %@", authSingleton.token);
+////            }
+////            
+////            
+////            if(_delegate && [_delegate respondsToSelector:@selector(socialFacebookDidReceiveConfiguration)]){
+////                [_delegate socialFacebookDidReceiveConfiguration];
+////            }
+////        }
+////        else {
+////            if(_delegate && [_delegate respondsToSelector:@selector(socialFacebookDidFailReceivingConfiguration)]){
+////                [_delegate socialFacebookDidFailReceivingConfiguration];
+////            }
+////        }
 //        
-//        if (_instance == nil) {
-//            
-//            _instance = [[super allocWithZone:NULL] init];
-//            
+//        
+//        switch (_currentAPICall) {
+//            case SFAPICallAppLogin: {
+//                NSString *response = [[NSString alloc] initWithData:_receivedData encoding:NSUTF8StringEncoding];
+//                NSArray *components = [response componentsSeparatedByString:@"="];
+//                [response release];
+//                
+//                NSString *accessToken = nil;
+//                
+//                if ([components count] == 2) {
+//                    // Success
+//                    accessToken = [components objectAtIndex:1];
+//                    if (_successBlock) {
+//                        ((SFAppLoginBlock)_successBlock)(accessToken);
+//                    }
+//                } else {
+//                    // Error
+//                    if (_failureBlock) {
+//                        _failureBlock([self errorWithDescription:@"Could not parse App Login Acess Token"]);
+//                    }
+//                }
+//                
+//                break;
+//            }
+//            default:
+//                break;
 //        }
 //    }
-//    return _instance;
+//
+//    // release the connection, and the data object
+//    [self releaseRequestObjects];
+//}
+//
+//
+//- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error{
+////    if(_delegate && [_delegate respondsToSelector:@selector(socialFacebookDidFailReceivingConfiguration)]){
+////        [_delegate socialFacebookDidFailReceivingConfiguration];
+////    }
 //    
+//    [_connection release];
+//    [_receivedData release];
+//}
+//
+//#pragma mark -
+
+
+//- (void) listAreaFeedsWithPostsPerPage:(int)postsPerPage {
+//    [self listFeedsFromUser:facebookUserId PageSize:postsPerPage];
 //}
 
-
-#pragma mark - NSURLConnectionDataDelegate
-
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-{
-    // Discard all previously received data.
-    [_receivedData setLength:0];
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
-{
-    // Append the new data to the receivedData.
-    [_receivedData appendData:data];     
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection
-{
-    if (_successBlock || _failureBlock) {
-    
-//        NSString *json =  [[[NSString alloc] initWithData:receivedData encoding:NSStringEnumerationByComposedCharacterSequences] autorelease];
-//        NSArray *areaInfo = [json JSONValue];
-//        
-//        if (areaInfo != nil && [areaInfo count] != 0) {
-//            facebookUserId = [[[(NSDictionary *)[areaInfo objectAtIndex:0] objectForKey:@"account_number"] description] retain];
-//            NSLog(@"facebookUserId = %@", facebookUserId);
-//            
-//            NSString* access_token = [(NSDictionary *)[areaInfo objectAtIndex:0] objectForKey:@"access_token"];
-//            if([access_token length] > 0){
-//                authSingleton.token = access_token;
-//                authSingleton.logged = YES;
-//                _facebook.accessToken = access_token;
-//                NSLog(@"auth_token = %@", authSingleton.token);
-//            }
-//            
-//            
-//            if(_delegate && [_delegate respondsToSelector:@selector(socialFacebookDidReceiveConfiguration)]){
-//                [_delegate socialFacebookDidReceiveConfiguration];
-//            }
-//        }
-//        else {
-//            if(_delegate && [_delegate respondsToSelector:@selector(socialFacebookDidFailReceivingConfiguration)]){
-//                [_delegate socialFacebookDidFailReceivingConfiguration];
-//            }
-//        }
-        
-        
-        switch (_currentAPICall) {
-            case SFAPICallAppLogin: {
-                NSString *response = [[NSString alloc] initWithData:_receivedData encoding:NSUTF8StringEncoding];
-                NSArray *components = [response componentsSeparatedByString:@"="];
-                [response release];
-                
-                NSString *accessToken = nil;
-                
-                if ([components count] == 2) {
-                    // Success
-                    accessToken = [components objectAtIndex:1];
-                    if (_successBlock) {
-                        ((SFAppLoginBlock)_successBlock)(accessToken);
-                    }
-                } else {
-                    // Error
-                    if (_failureBlock) {
-                        _failureBlock([self errorWithDescription:@"Could not parse App Login Acess Token"]);
-                    }
-                }
-                
-                break;
-            }
-            default:
-                break;
-        }
-    }
-
-    // release the connection, and the data object
-    [self releaseRequestObjects];
-}
-
-
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error{
-//    if(_delegate && [_delegate respondsToSelector:@selector(socialFacebookDidFailReceivingConfiguration)]){
-//        [_delegate socialFacebookDidFailReceivingConfiguration];
-//    }
-    
-    [_connection release];
-    [_receivedData release];
-}
-
-#pragma mark -
-
-
-- (void) listAreaFeedsWithPostsPerPage: (int)postsPerPage {
-    [self listFeedsFromUser:facebookUserId PageSize:postsPerPage];
-}
-
-
-- (void) listNextPage {
-	[_delegate retain];
-    if (_feedsNextPage) {
-        [_facebook requestWithGraphPath:_feedsNextPage andDelegate:self];
-    } else {
-        if ([_delegate respondsToSelector:@selector(socialFacebook:ReceivedPosts:)]) {
-			[_delegate socialFacebook:self ReceivedPosts:[NSArray array]];
-		}
-    }
-}
 
 - (void) handleLike: (NSString *) postId {
 	[_delegate retain];
@@ -897,11 +880,13 @@ typedef enum {
         [self clearUserInfo];
     }
     
-    if (_failureBlock) {
-        _failureBlock(error);
+    NSDictionary *customAttributes = [request customAttributes];
+    SFFailureBlock failureBlock = [customAttributes objectForKey:kSFFBRequestAttributeFailure];
+    if (failureBlock) {
+        failureBlock(error);
     }
     
-    [self releaseRequestObjects];
+    [_fbRequests removeObject:request];
 }
 
 -(NSDate *) dateFromString:(NSString *)_date {
@@ -925,10 +910,13 @@ typedef enum {
 - (void)request:(FBRequest *)request didLoad:(id)result {
 	
 //	NSString *url = [request url];
-	
-    if (_successBlock || _failureBlock) {
+	NSDictionary *customAttributes = [request customAttributes];
+    id successBlock = [customAttributes objectForKey:kSFFBRequestAttributeSuccess];
+    SFFailureBlock failureBlock = [customAttributes objectForKey:kSFFBRequestAttributeFailure];
+    
+    if (successBlock || failureBlock) {
         
-        switch(_currentAPICall) {
+        switch([[customAttributes objectForKey:kSFFBRequestAttributeAPICall] intValue]) {
             case SFAPICallListFeeds: {
                 SFSimplePost *post = nil;
                 NSMutableArray *posts = [NSMutableArray array];
@@ -974,17 +962,15 @@ typedef enum {
                     [post release];
                 }
                 
-                [_feedsNextPage release];
+                NSString *nextPage = nil;
                 NSDictionary *paging = [result objectForKey:@"paging"];
                 if (paging) {
-                    _feedsNextPage = [(NSString *)[paging objectForKey:@"next"] retain];
-                    //                int pos = [_feedsNextPage rangeOfString:@".com/"].location + 5;
-                    //                _feedsNextPage = [[_feedsNextPage substringFromIndex:pos] retain];
+                    nextPage = (NSString *)[paging objectForKey:@"next"];
+                    int pos = [nextPage rangeOfString:@".com/"].location + 5;
+                    nextPage = [nextPage substringFromIndex:pos];
                 }
-                
-                if (_successBlock) {
-                    SFFeedsBlock completionBlock = (SFFeedsBlock) _successBlock;
-                    completionBlock(posts);
+                if (successBlock) {
+                    ((SFFeedsBlock)successBlock)(posts, nextPage);
                 }
                 
                 break;
@@ -1133,8 +1119,18 @@ typedef enum {
 //		}
 //	}
     }
-    
-    [self releaseRequestObjects];
+    [_fbRequests removeObject:request];
+//    [self releaseRequestObjects];
+}
+
+- (void)requestDidCancel:(FBRequest *)request
+{
+    NSDictionary *customAttributes = [request customAttributes];
+    SFBasicBlock cancelBlock = [customAttributes objectForKey:kSFFBRequestAttributeCancel];
+    if (cancelBlock) {
+        cancelBlock();
+    }
+    [_fbRequests removeObject:request];
 }
 
 /**
@@ -1244,14 +1240,13 @@ typedef enum {
 	[_facebook release];
 	[_appId release];
     [_appSecret release];
-    
+    [_fbRequests release];
     
     [shingleServerPath release];
 //    [authSingleton release];
 	[pendingActionParams release];
 	[nextPageInvited release];
 	[nextPageFriends release];
-	[_feedsNextPage release];
 	[facebookUserId release];
 	[loggedUserId release];
 	NSLog(@"fb dealoc");

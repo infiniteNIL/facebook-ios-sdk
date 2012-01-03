@@ -180,7 +180,7 @@ static void *finishedContext = @"finishedContext";
         [self.sessionDelegate fbSessionInvalidated];
       }
     }
-    if (requestState == kFBRequestStateComplete || requestState == kFBRequestStateError) {
+    if (requestState == kFBRequestStateComplete || requestState == kFBRequestStateError || requestState == kFBRequestStateCancelled) {
       [_request removeObserver:self forKeyPath:requestFinishedKeyPath];
       [_requests removeObject:_request];
     }

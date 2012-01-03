@@ -23,7 +23,8 @@ enum {
   kFBRequestStateReady,
   kFBRequestStateLoading,
   kFBRequestStateComplete,
-  kFBRequestStateError
+  kFBRequestStateError,
+  kFBRequestStateCancelled,
 };
 typedef NSUInteger FBRequestState;
 
@@ -70,6 +71,8 @@ typedef NSUInteger FBRequestState;
  */
 @property(nonatomic,retain) NSError* error;
 
+@property(nonatomic,retain) NSDictionary *customAttributes;
+
 
 + (NSString*)serializeURL:(NSString *)baseUrl
                    params:(NSDictionary *)params;
@@ -85,6 +88,8 @@ typedef NSUInteger FBRequestState;
 - (BOOL) loading;
 
 - (void) connect;
+
+- (void) cancel;
 
 @end
 
@@ -127,6 +132,11 @@ typedef NSUInteger FBRequestState;
  * The result object is the raw response from the server of type NSData
  */
 - (void)request:(FBRequest *)request didLoadRawResponse:(NSData *)data;
+
+/**
+ * Called when a request was cancelled.
+ */
+- (void)requestDidCancel:(FBRequest *)request;
 
 @end
 

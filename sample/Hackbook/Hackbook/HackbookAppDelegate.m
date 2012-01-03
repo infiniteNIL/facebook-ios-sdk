@@ -55,7 +55,7 @@ static NSString* kAppId = @"210849718975311";
     // Initialize Facebook
     facebook = [[Facebook alloc] initWithAppId:kAppId andDelegate:rootViewController];
     
-    _socialFacebook = [[SFSocialFacebook alloc] initWithAppId:@"198801296855729" appSecret:@"abe6ebce8a657c18c748887d9d480265" andDelegate:nil];
+    _socialFacebook = [SFSocialFacebook sharedInstanceWithAppId:@"198801296855729" appSecret:@"abe6ebce8a657c18c748887d9d480265" urlSchemeSuffix:nil];
     
     // Initialize API data (for views, etc.)
     apiData = [[DataSet alloc] init];
@@ -134,16 +134,15 @@ static NSString* kAppId = @"210849718975311";
     [_window release];
     [_navigationController release];
     [facebook release];
-    [_socialFacebook release];
     [apiData release];
     [userPermissions release];
     [super dealloc];
 }
 
-#pragma mark - UIAlertViewDelegate methods
-- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
-    // Quit the app
-    exit(1);
-}
+//#pragma mark - UIAlertViewDelegate methods
+//- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
+//    // Quit the app
+//    exit(1);
+//}
 
 @end

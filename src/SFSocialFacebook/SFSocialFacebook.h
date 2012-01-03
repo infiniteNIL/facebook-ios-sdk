@@ -18,7 +18,7 @@
 
 
 typedef void (^SFDidNotLoginBlock)(BOOL cancelled);
-typedef void (^SFFeedsBlock)(NSArray *posts);
+typedef void (^SFFeedsBlock)(NSArray *posts, NSString *nextPageURL);
 typedef void (^SFFailureBlock)(NSError *error);
 typedef void (^SFBasicBlock)(void);
 
@@ -30,9 +30,7 @@ typedef void (^SFBasicBlock)(void);
 @interface SFSocialFacebook : NSObject <FBSessionDelegate, FBRequestDelegate, NSURLConnectionDataDelegate, UIAlertViewDelegate> {
     
     Facebook            *_facebook;
-	NSString            *_appId;
-    NSString            *_appSecret;
-    FBRequest           *_fbRequest;
+    NSMutableArray      *_fbRequests;
     NSString            *_appAccessToken;
     
     NSURLConnection     *_connection;
@@ -41,9 +39,6 @@ typedef void (^SFBasicBlock)(void);
     SFURLRequest        *_urlRequest;
     
     NSInteger           _currentAPICall;
-    id                  _successBlock;
-    SFFailureBlock      _failureBlock;
-    SFBasicBlock        _cancelBlock;
     
     SFBasicBlock        _loginBlock;
     SFDidNotLoginBlock  _notLoginBlock;
@@ -53,7 +48,6 @@ typedef void (^SFBasicBlock)(void);
 //    SFAuthorization *authSingleton;
 	NSString *facebookUserId;
     int areaId;
-	NSString *_feedsNextPage;
 	
 	NSString *nextPageFriends;
 	NSString *nextPageInvited;
@@ -67,6 +61,11 @@ typedef void (^SFBasicBlock)(void);
 }
 
 + (SFSocialFacebook *)sharedInstance;
++ (SFSocialFacebook *)sharedInstanceWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix;
+
+@property (nonatomic, copy) NSString *appId;
+@property (nonatomic, copy) NSString *appSecret;
+
 
 @property (nonatomic, assign) id<SFPostDatasource> delegate;
 @property (nonatomic, retain) NSArray *permissions;
@@ -74,19 +73,13 @@ typedef void (^SFBasicBlock)(void);
 @property (nonatomic, retain) NSString *facebookUserId;
 @property (nonatomic, retain) NSString *loggedUserId;
 
-- (id)initWithAppId:(NSString *)appId appSecret:(NSString *)appSecret andDelegate:(id<SFPostDatasource>)delegate;
-- (id)initWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix andDelegate:(id<SFPostDatasource>)delegate;
-
 - (void)loginWithSuccess:(SFBasicBlock)successBlock failure:(SFDidNotLoginBlock)failureBlock;
 - (void)logoutWithSuccess:(SFBasicBlock)successsBlock;
 - (BOOL)handleOpenURL:(NSURL *)url;
 - (BOOL)isSessionValid;
 
-- (void)listFeedsFromUser:(NSString *)userId 
-                 pageSize:(int)postsPerPage 
-                  success:(SFFeedsBlock)successBlock 
-                  failure:(SFFailureBlock)failureBlock
-                   cancel:(SFBasicBlock)cancelBlock;
+- (void)listProfileFeed:(NSString *)profileId pageSize:(int)postsPerPage success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (void)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 //- (id) initWithAppId: (NSString *) applicationId
 //andAuthorizationSingleton: (SFAuthorization *) authorizationSingleton
@@ -105,7 +98,6 @@ typedef void (^SFBasicBlock)(void);
 
 
 - (void) listAreaFeedsWithPostsPerPage: (int)postsPerPage;
-- (void) listNextPage;
 
 - (void) handleLike: (NSString *) postId;
 //- (void) handleComment: (NSString *) comment InPost: (NSString *) postId;

@@ -315,7 +315,7 @@
     currentAPICall = kAPILogout;
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
 //    [[delegate facebook] logout];
-    [[delegate socialFacebook] :nil];
+    [[delegate socialFacebook] logoutWithSuccess:nil];
 }
 
 /*
@@ -710,15 +710,14 @@
  */
 - (void) apiGraphUserFeeds {
     [self showActivityIndicator];
-    HackbookAppDelegate *delegate = (HackbookAppDelegate *) [[UIApplication sharedApplication] delegate]; 
-    [[delegate socialFacebook] listFeedsFromUser:@"me" 
-                                        pageSize:25 
-                                         success:^(NSArray *posts) {
-                                             
-                                         } 
-                                         failure:^(NSError *error) {
-                                             
-                                         } cancel:nil];
+    [[SFSocialFacebook sharedInstance] listProfileFeed:@"me"
+                                              pageSize:25 
+                                               success:^(NSArray *posts, NSString *nextPageURL) {
+                                                   
+                                               } 
+                                               failure:^(NSError *error) {
+                                                   
+                                               } cancel:nil];
 }
 
 #pragma mark - UITableViewDatasource and UITableViewDelegate Methods
