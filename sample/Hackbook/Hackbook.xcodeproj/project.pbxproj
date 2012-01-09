@@ -93,6 +93,7 @@
 		30EA73FB13F5D590003DC0D2 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		30ED588B14358F8A00A226C3 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
 		30ED588E14358F9400A226C3 /* Icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Icon@2x.png"; sourceTree = "<group>"; };
+		5B515EB314B71FC8002406D6 /* SFLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFLog.h; sourceTree = "<group>"; };
 		5BDBF41814AB879500EBB0E9 /* JSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = JSON.h; path = ../../SBJson/Classes/JSON.h; sourceTree = "<group>"; };
 		5BDBF41914AB879500EBB0E9 /* NSObject+SBJson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSObject+SBJson.h"; path = "../../SBJson/Classes/NSObject+SBJson.h"; sourceTree = "<group>"; };
 		5BDBF41A14AB879500EBB0E9 /* NSObject+SBJson.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSObject+SBJson.m"; path = "../../SBJson/Classes/NSObject+SBJson.m"; sourceTree = "<group>"; };
@@ -290,6 +291,7 @@
 				5BDBF4F014AB8AAD00EBB0E9 /* SFSocialFacebook.m */,
 				5BDBF4F114AB8AAD00EBB0E9 /* SFURLRequest.h */,
 				5BDBF4F214AB8AAD00EBB0E9 /* SFURLRequest.m */,
+				5B515EB314B71FC8002406D6 /* SFLog.h */,
 			);
 			name = SFSocialFacebook;
 			path = ../../src/SFSocialFacebook;

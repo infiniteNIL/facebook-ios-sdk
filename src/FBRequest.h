@@ -71,8 +71,6 @@ typedef NSUInteger FBRequestState;
  */
 @property(nonatomic,retain) NSError* error;
 
-@property(nonatomic,retain) NSDictionary *customAttributes;
-
 
 + (NSString*)serializeURL:(NSString *)baseUrl
                    params:(NSDictionary *)params;

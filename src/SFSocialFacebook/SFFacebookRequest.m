@@ -8,23 +8,113 @@
 
 #import "SFFacebookRequest.h"
 #import "Facebook.h"
+#import "SFUtil.h"
+#import "SFSocialFacebook.h"
+
+@interface SFFacebookRequest (Private)
+
+- (void)releaseObjects;
+
+@end
 
 @implementation SFFacebookRequest
 
-- (id)initWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath success:(void (^)(id))success failure:(void (^)(NSError *))failure
++ (id)requestWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(void (^)(id))successBlock failure:(void (^)(NSError *))failureBlock cancel:(void (^)())cancelBlock
+{
+    return [[[self alloc] initWithFacebook:facebook graphPath:graphPath needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock] autorelease];
+}
+
++ (id)requestWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath params:(NSMutableDictionary *)params needsLogin:(BOOL)needsLogin success:(void (^)(id))successBlock failure:(void (^)(NSError *))failureBlock cancel:(void (^)())cancelBlock
+{
+    return [[[self alloc] initWithFacebook:facebook graphPath:graphPath params:params needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock] autorelease];
+}
+
++ (id)requestWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath params:(NSMutableDictionary *)params httpMethod:(NSString *)httpMethod needsLogin:(BOOL)needsLogin success:(void (^)(id))successBlock failure:(void (^)(NSError *))failureBlock cancel:(void (^)())cancelBlock
+{
+    return [[[self alloc] initWithFacebook:facebook graphPath:graphPath params:params httpMethod:httpMethod needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock] autorelease];
+}
+
+- (id)initWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(void (^)(id))successBlock failure:(void (^)(NSError *))failureBlock cancel:(void (^)())cancelBlock
+{
+    return [self initWithFacebook:facebook graphPath:graphPath params:[NSMutableDictionary dictionary] httpMethod:@"GET" needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
+}
+
+- (id)initWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath params:(NSMutableDictionary *)params needsLogin:(BOOL)needsLogin success:(void (^)(id))successBlock failure:(void (^)(NSError *))failureBlock cancel:(void (^)())cancelBlock
+{
+    return [self initWithFacebook:facebook graphPath:graphPath params:params httpMethod:@"GET" needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
+}
+
+- (id)initWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath params:(NSMutableDictionary *)params httpMethod:(NSString *)httpMethod needsLogin:(BOOL)needsLogin success:(void (^)(id))successBlock failure:(void (^)(NSError *))failureBlock cancel:(void (^)())cancelBlock
 {
     self = [self init];
     if (self) {
-        _successBlock = [success copy];
-        _failureBlock = [failure copy];
-        [facebook requestWithGraphPath:graphPath andDelegate:self];
+        _successBlock = [successBlock copy];
+        _failureBlock = [failureBlock copy];
+        _cancelBlock = [cancelBlock copy];
+        
+        SFSocialFacebook *socialFacebook = [SFSocialFacebook sharedInstance];
+        
+        if (![socialFacebook isSessionValid:needsLogin]) {
+            if (needsLogin) {
+                
+                [socialFacebook loginWithSuccess:^{
+                    _request = [[facebook requestWithGraphPath:graphPath andParams:params andHttpMethod:httpMethod andDelegate:self] retain];
+                } failure:^(BOOL cancelled) {
+                    if (cancelled && cancelBlock) {
+                        cancelBlock();
+                    }
+                    else if (failureBlock) {
+                        failureBlock(SFError(@"Could not login"));
+                    }
+                }];
+                
+            } else {
+                
+                [socialFacebook getAppAccessTokenWithSuccess:^(NSString *accessToken) {
+                    [params setObject:accessToken forKey:@"access_token"];
+                    _request = [[facebook requestWithGraphPath:graphPath andParams:params andHttpMethod:httpMethod andDelegate:self] retain];
+                } failure:failureBlock];
+            }
+        }
+        else
+        {
+            _request = [[facebook requestWithGraphPath:graphPath andParams:params andHttpMethod:httpMethod andDelegate:self] retain];
+        }
+        [self retain];
     }
     return self;
 }
 
-+ (SFFacebookRequest *)requestWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath success:(void (^)(id))success failure:(void (^)(NSError *))failure
+- (void)dealloc
 {
-    return [[[SFFacebookRequest alloc] initWithFacebook:facebook graphPath:graphPath success:success failure:failure] autorelease];
+    [_request release];
+    [_successBlock release];
+    [_failureBlock release];
+    [_cancelBlock release];
+    
+    [super dealloc];
+}
+
+- (void)cancel
+{
+//    [_request cancel];
+    
+    if (_cancelBlock) {
+        _cancelBlock();
+    }
+    
+    [self releaseObjects];
+}
+
+#pragma mark - Private
+
+- (void)releaseObjects
+{
+    [_request release], _request = nil;
+    [_successBlock release], _successBlock = nil;
+    [_failureBlock release], _failureBlock = nil;
+    [_cancelBlock release], _cancelBlock = nil;
+    [self release];
 }
 
 #pragma mark - FBRequestDelegate
@@ -43,10 +133,13 @@
  * Called when an error prevents the request from completing successfully.
  */
 - (void)request:(FBRequest *)request didFailWithError:(NSError *)error {
-	NSLog(@"Error: %@", [error description]);
     
-    _failureBlock(error);
-    [_failureBlock release];
+	SFDLog(@"Error: %@", [error localizedDescription]);
+    
+    if (_failureBlock) {
+        _failureBlock(error);
+    }
+    [self releaseObjects];
 }
 
 /**
@@ -57,8 +150,20 @@
  * depending on thee format of the API response.
  */
 - (void)request:(FBRequest *)request didLoad:(id)result {
-	_successBlock(result);
-    [_successBlock release];
+    
+    SFDLog(@"Request loaded with result: %@", result);
+    
+    if (_successBlock) {
+        _successBlock(result);
+    }
+    [self releaseObjects];
+}
+
+- (void)requestDidCancel:(FBRequest *)request
+{
+    SFDLog(@"Request cancelled");
+    
+    [self cancel];
 }
 
 @end

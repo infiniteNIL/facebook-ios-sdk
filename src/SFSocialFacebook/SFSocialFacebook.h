@@ -12,10 +12,10 @@
 #import "SFUser.h"
 #import "SFSimpleEvent.h"
 #import "SFSimpleEventInvite.h"
-//#import "SFAuthorization.h"
 
 #define SF_FEEDS @"feed"
 
+@class SFFacebookRequest;
 
 typedef void (^SFDidNotLoginBlock)(BOOL cancelled);
 typedef void (^SFFeedsBlock)(NSArray *posts, NSString *nextPageURL);
@@ -27,25 +27,21 @@ typedef void (^SFBasicBlock)(void);
 
 @class SFURLRequest;
 
-@interface SFSocialFacebook : NSObject <FBSessionDelegate, FBRequestDelegate, NSURLConnectionDataDelegate, UIAlertViewDelegate> {
+@interface SFSocialFacebook : NSObject <FBSessionDelegate, UIAlertViewDelegate> {
     
     Facebook            *_facebook;
-    NSMutableArray      *_fbRequests;
+    NSArray             *_permissions;
+    NSString            *_appId;
+    NSString            *_appSecret;
     NSString            *_appAccessToken;
     
-    NSURLConnection     *_connection;
-    NSMutableData       *_receivedData;
-    
     SFURLRequest        *_urlRequest;
-    
-    NSInteger           _currentAPICall;
     
     SFBasicBlock        _loginBlock;
     SFDidNotLoginBlock  _notLoginBlock;
     SFBasicBlock        _logoutBlock;
     
     
-//    SFAuthorization *authSingleton;
 	NSString *facebookUserId;
     int areaId;
 	
@@ -61,25 +57,29 @@ typedef void (^SFBasicBlock)(void);
 }
 
 + (SFSocialFacebook *)sharedInstance;
-+ (SFSocialFacebook *)sharedInstanceWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix;
-
-@property (nonatomic, copy) NSString *appId;
-@property (nonatomic, copy) NSString *appSecret;
++ (SFSocialFacebook *)sharedInstanceWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix andPermissions:(NSArray *)permissions;
 
 
 @property (nonatomic, assign) id<SFPostDatasource> delegate;
-@property (nonatomic, retain) NSArray *permissions;
 
 @property (nonatomic, retain) NSString *facebookUserId;
 @property (nonatomic, retain) NSString *loggedUserId;
 
+- (BOOL)handleOpenURL:(NSURL *)url;
+- (BOOL)isSessionValid:(BOOL)needsLogin;
+
+- (void)getAppAccessTokenWithSuccess:(void (^)(NSString *accessToken))successBlock failure:(SFFailureBlock)failureBlock;
+
 - (void)loginWithSuccess:(SFBasicBlock)successBlock failure:(SFDidNotLoginBlock)failureBlock;
 - (void)logoutWithSuccess:(SFBasicBlock)successsBlock;
-- (BOOL)handleOpenURL:(NSURL *)url;
-- (BOOL)isSessionValid;
+- (SFFacebookRequest *)uninstallApp:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
-- (void)listProfileFeed:(NSString *)profileId pageSize:(int)postsPerPage success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
-- (void)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)listProfileFeed:(NSString *)profileId pageSize:(int)postsPerPage needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+
+- (void)shareFeed:(SFSimplePost *)post;
+- (void)shareFeed:(SFSimplePost *)post WithComment: (NSString *)comment;
+
 
 //- (id) initWithAppId: (NSString *) applicationId
 //andAuthorizationSingleton: (SFAuthorization *) authorizationSingleton
@@ -104,8 +104,6 @@ typedef void (^SFBasicBlock)(void);
 //- (void) handleUnlike: (NSString *) postId;
 - (void) fillUser: (SFUser *)user WithId: (NSString *)userId Target:(id)target AndSelector:(SEL)didFinish;
 - (void) fillUser: (SFUser *)user Target:(id)target AndSelector:(SEL)didFinish;
-- (void) shareFeed: (SFSimplePost *)post;
-- (void) shareFeed: (SFSimplePost *)post WithComment: (NSString *)comment;
 
 - (void) createEvent: (SFSimpleEvent *)event;
 - (void) inviteFriendsToEvent: (SFSimpleEventInvite *)invite;

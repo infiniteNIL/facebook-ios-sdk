@@ -41,8 +41,7 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
             connection = _connection,
             responseText = _responseText,
             state = _state,
-            error = _error,
-            customAttributes = _customAttributes;
+            error = _error;
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // class public
 
@@ -341,7 +340,6 @@ static const NSTimeInterval kTimeoutInterval = 180.0;
   [_url release];
   [_httpMethod release];
   [_params release];
-  [_customAttributes release];
   [super dealloc];
 }
 

@@ -11,15 +11,25 @@
 
 @class Facebook;
 
+
 @interface SFFacebookRequest : NSObject <FBRequestDelegate> {
+    
+    FBRequest *_request;
     
     // Blocks
     void (^_successBlock)(id);
     void (^_failureBlock)(NSError *);
+    void (^_cancelBlock)(void);
 }
 
-- (id)initWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath success:(void (^)(id result))success failure:(void (^)(NSError *error))failure;
++ (id)requestWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(void (^)(id result))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
++ (id)requestWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath params:(NSMutableDictionary *)params needsLogin:(BOOL)needsLogin success:(void (^)(id result))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
++ (id)requestWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath params:(NSMutableDictionary *)params httpMethod:(NSString *)httpMethod needsLogin:(BOOL)needsLogin success:(void (^)(id result))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
 
-+ (SFFacebookRequest *)requestWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath success:(void (^)(id result))success failure:(void (^)(NSError *error))failure;
+- (id)initWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(void (^)(id result))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
+- (id)initWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath params:(NSMutableDictionary *)params needsLogin:(BOOL)needsLogin success:(void (^)(id result))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
+- (id)initWithFacebook:(Facebook *)facebook graphPath:(NSString *)graphPath params:(NSMutableDictionary *)params httpMethod:(NSString *)httpMethod needsLogin:(BOOL)needsLogin success:(void (^)(id result))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
+
+- (void)cancel;
 
 @end

@@ -7,9 +7,20 @@
 //
 
 #import "SFURLRequest.h"
+#import "SFUtil.h"
+
+@interface SFURLRequest (Private)
+
+- (void)releaseObjects;
+
+@end
 
 @implementation SFURLRequest
 
++ (id)requestWithURL:(NSString *)url success:(void (^)(NSData *))successBlock failure:(void (^)(NSError *))failureBlock
+{
+    return [[[self alloc] initWithURL:url success:successBlock failure:failureBlock] autorelease];
+}
 
 - (id)initWithURL:(NSString *)url success:(void (^)(NSData *))successBlock failure:(void (^)(NSError *))failureBlock
 {
@@ -46,10 +57,7 @@
 - (void)cancel
 {
     [_connection cancel];
-    [_connection release], _connection = nil;
-    [_receivedData release], _receivedData = nil;
-    [_successBlock release], _successBlock = nil;
-    [_failureBlock release], _failureBlock = nil;
+    [self releaseObjects];
 }
 
 #pragma mark - Dealloc
@@ -64,6 +72,15 @@
     [super dealloc];
 }
 
+#pragma mark - Private
+
+- (void)releaseObjects
+{
+    [_connection release], _connection = nil;
+    [_receivedData release], _receivedData = nil;
+    [_successBlock release], _successBlock = nil;
+    [_failureBlock release], _failureBlock = nil;
+}
 
 #pragma mark - NSURLConnectionDataDelegate
 
@@ -90,10 +107,7 @@
 {
     _successBlock(_receivedData);
     
-    // release objects
-    [connection release];
-    [_receivedData release];
-    [_successBlock release];
+    [self releaseObjects];
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
@@ -101,12 +115,9 @@
     // Connection failed
     _failureBlock(error);
     
-    // release objects
-    [connection release];
-    [_receivedData release];
-    [_failureBlock release];
+    [self releaseObjects];
     
-    NSLog(@"Connection failed! Error - %@ %@",
+    SFDLog(@"Connection failed! Error - %@ %@",
           [error localizedDescription],
           [[error userInfo] objectForKey:NSURLErrorFailingURLStringErrorKey]);
 }

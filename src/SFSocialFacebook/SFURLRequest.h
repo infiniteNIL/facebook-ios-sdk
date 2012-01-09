@@ -18,9 +18,9 @@
     void (^_failureBlock)(NSError *);
 }
 
-- (id)initWithURL:(NSString *)url
-          success:(void (^)(NSData *receivedData))successBlock
-          failure:(void (^)(NSError *error))failureBlock;
++ (id)requestWithURL:(NSString *)url success:(void (^)(NSData *receivedData))successBlock failure:(void (^)(NSError *error))failureBlock;;
+
+- (id)initWithURL:(NSString *)url success:(void (^)(NSData *receivedData))successBlock failure:(void (^)(NSError *error))failureBlock;
 
 - (void)cancel;
 
