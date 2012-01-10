@@ -314,8 +314,7 @@
 - (void)apiLogout {
     currentAPICall = kAPILogout;
     HackbookAppDelegate *delegate = (HackbookAppDelegate *)[[UIApplication sharedApplication] delegate];
-//    [[delegate facebook] logout];
-    [[delegate socialFacebook] logoutWithSuccess:nil];
+    [[delegate facebook] logout];
 }
 
 /*
@@ -703,21 +702,6 @@
                          andParams:params
                      andHttpMethod:@"POST"
                        andDelegate:self];
-}
-
-/*
- * Graph API: Show user feeds
- */
-- (void) apiGraphUserFeeds {
-    [self showActivityIndicator];
-    [[SFSocialFacebook sharedInstance] listProfileFeed:@"me"
-                                              pageSize:25 
-                                               success:^(NSArray *posts, NSString *nextPageURL) {
-                                                   
-                                               } 
-                                               failure:^(NSError *error) {
-                                                   
-                                               } cancel:nil];
 }
 
 #pragma mark - UITableViewDatasource and UITableViewDelegate Methods

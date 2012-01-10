@@ -17,7 +17,6 @@
 #import <UIKit/UIKit.h>
 #import "FBConnect.h"
 #import "DataSet.h"
-#import "SFSocialFacebook.h"
 
 @interface HackbookAppDelegate : NSObject <UIApplicationDelegate,UIAlertViewDelegate> {
     Facebook *facebook;
@@ -30,8 +29,6 @@
 @property (nonatomic, retain) UINavigationController *navigationController;
 
 @property (nonatomic, retain) Facebook *facebook;
-
-@property (nonatomic, retain) SFSocialFacebook *socialFacebook;
 
 @property (nonatomic, retain) DataSet *apiData;
 
