@@ -16,6 +16,8 @@
 - (void)login;
 - (void)logout;
 - (void)uninstallApp;
+- (void)publish;
+- (void)publishToFriend;
 
 @end
 
@@ -154,6 +156,30 @@
     } cancel:^{
         [self showAlertViewWithTitle:@"Uninstall App" message:@"Canceled"];
     }];
+}
+
+- (void)publish
+{
+    SFSimplePost *post = [[SFSimplePost alloc] init];
+    post.name = @"I'm using the I.ndigo Test App for iOS app";
+    post.caption = @"I.ndigo Test App for iOS.";
+    post.sDescription = @"Check out I.ndigo Test App for iOS to learn how you can make your iOS apps social using Facebook Platform.";
+    post.link = @"http://www.i.ndigo.com.br/";
+    post.picture = @"https://fbcdn-photos-a.akamaihd.net/photos-ak-snc1/v85006/197/198801296855729/app_1_198801296855729_3543.gif";
+    
+    [[SFSocialFacebook sharedInstance] publishPost:post success:^(NSString *postId) {
+        [self showAlertViewWithTitle:nil message:@"Success!"];
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"User cancelled"];
+    }];
+    [post release];
+}
+
+- (void)publishToFriend
+{
+    
 }
 
 @end

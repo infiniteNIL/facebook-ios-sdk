@@ -24,18 +24,6 @@
  
  */
 
-typedef enum {
-    SFAPICallUninstallApp,
-    SFAPICallAppLogin,
-    SFAPICallListFeeds,
-} SFAPICall;
-
-static NSString* kSFFBRequestAttributeAPICall = @"apiCall";
-static NSString* kSFFBRequestAttributeSuccess = @"success";
-static NSString* kSFFBRequestAttributeFailure = @"failure";
-static NSString* kSFFBRequestAttributeCancel = @"cancel";
-
-
 @interface SFSocialFacebook (Private)
 
 - (id)initWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix andPermissions:(NSArray *)permissions;
@@ -47,6 +35,8 @@ static NSString* kSFFBRequestAttributeCancel = @"cancel";
 - (SFFacebookRequest *)listProfileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 - (void)clearUserInfo;
+- (NSDictionary *)parseURLParams:(NSString *)query;
+- (void)releaseDialogBlocks;
 
 @end
 
@@ -298,6 +288,51 @@ static SFSocialFacebook *_instance;
     return [self listProfileFeedWithGraphPath:nextPageURL needsLogin:NO success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
+- (void)publishPost:(SFSimplePost *)post success:(SFPublishBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    if (![_facebook isSessionValid]) {
+        [self loginWithSuccess:^{
+            [self publishPost:post success:successBlock failure:failureBlock cancel:cancelBlock];
+        } failure:^(BOOL cancelled) {
+            if (cancelled)
+            {
+                if (cancelBlock) {
+                    cancelBlock();
+                }
+            }
+            else if (failureBlock)
+            {
+                failureBlock(SFError(@"Could not login"));
+            }
+        }];
+    }
+    else
+    {
+        _currentDialogRequest = SFDialogRequestPublish;
+        _dialogSuccessBlock = [successBlock copy];
+        _dialogFailureBlock = [failureBlock copy];
+        _dialogCancelBlock = [cancelBlock copy];
+        
+        SBJsonWriter *jsonWriter = [[SBJsonWriter new] autorelease];
+        
+        // The action links to be shown with the post in the feed
+        NSArray *actionLinks = [NSArray arrayWithObjects:[NSDictionary dictionaryWithObjectsAndKeys:
+                                                          @"Get Started",@"name",@"http://m.facebook.com/apps/hackbookios/",@"link", nil], nil];
+        NSString *actionLinksStr = [jsonWriter stringWithObject:actionLinks];
+        // Dialog parameters
+        NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
+                                       post.name, @"name",
+                                       post.caption, @"caption",
+                                       post.sDescription, @"description",
+                                       post.link, @"link",
+                                       post.picture, @"picture",
+                                       actionLinksStr, @"actions",
+                                       nil];
+
+        [_facebook dialog:@"feed" andParams:params andDelegate:self];
+    }
+}
+
 #pragma mark - Private
 
 - (SFFacebookRequest *)facebookRequestWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(void (^)(id))successBlock failure:(void (^)(NSError *))failureBlock cancel:(void (^)())cancelBlock
@@ -328,6 +363,29 @@ static SFSocialFacebook *_instance;
         [defaults removeObjectForKey:@"FBExpirationDateKey"];
         [defaults synchronize];
     }
+}
+
+/**
+ * Helper method to parse URL query parameters
+ */
+- (NSDictionary *)parseURLParams:(NSString *)query
+{
+	NSArray *pairs = [query componentsSeparatedByString:@"&"];
+	NSMutableDictionary *params = [[[NSMutableDictionary alloc] init] autorelease];
+	for (NSString *pair in pairs) {
+		NSArray *kv = [pair componentsSeparatedByString:@"="];
+		NSString *val = [[kv objectAtIndex:1] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+        
+		[params setObject:val forKey:[kv objectAtIndex:0]];
+	}
+    return params;
+}
+
+- (void)releaseDialogBlocks
+{
+    [_dialogSuccessBlock release], _dialogSuccessBlock = nil;
+    [_dialogFailureBlock release], _dialogFailureBlock = nil;
+    [_dialogCancelBlock release], _dialogCancelBlock = nil;
 }
 
 - (SFFacebookRequest *)listProfileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
@@ -1107,37 +1165,6 @@ static SFSocialFacebook *_instance;
 }
 
 
--(void) performPendingAction {
-	if (pendingAction == @selector(shareFeed:WithComment:)) {
-		[self performSelector:pendingAction withObject:[pendingActionParams objectForKey:@"post"] withObject:[pendingActionParams objectForKey:@"comment"]];
-	}
-	else if (pendingAction == @selector(handleLike:) || pendingAction == @selector(handleUnlike:)){
-		[self performSelector:pendingAction withObject:[pendingActionParams objectForKey:@"postId"]];
-	}
-	//else if (pendingAction == @selector(handleComment:InPost:)) {
-	//	[self performSelector:pendingAction withObject:[pendingActionParams objectForKey:@"comment"] withObject:[pendingActionParams objectForKey:@"postId"]];
-	//}
-	else if (pendingAction == @selector(createEvent:)){
-		[self performSelector:pendingAction withObject:[pendingActionParams objectForKey:@"event"]];
-	}
-	else if (pendingAction == @selector(inviteFriendsToEvent:)) {
-		[self performSelector:pendingAction withObject:[pendingActionParams objectForKey:@"event"]];
-	}
-	else if (pendingAction == @selector(listFriendsOfLoggedUser:)) {
-		[self performSelector:pendingAction withObject:[pendingActionParams objectForKey:@"pageSize"]];
-	}
-	else if (pendingAction == @selector(eventMarkAttending:)) {
-		[self performSelector:pendingAction withObject:[pendingActionParams objectForKey:@"eventId"]];
-	}
-	else if (pendingAction == @selector(getEvent:)) {
-		[self performSelector:pendingAction withObject:[pendingActionParams objectForKey:@"eventId"]];
-	}
-	else if (pendingAction == @selector(getInvitedUsersForEvent:PageSize:)) {
-		[self performSelector:pendingAction withObject:[pendingActionParams objectForKey:@"eventId"] withObject:[pendingActionParams objectForKey:@"pageSize"]];
-	}
-}
-
-
 #pragma mark - FBSessionDelegate methods
 /**
  * Called when the user successfully logged in.
@@ -1209,6 +1236,103 @@ static SFSocialFacebook *_instance;
     
     [self clearUserInfo];
 }
+
+#pragma mark - FBDialogDelegate
+
+/**
+ * Called when the dialog succeeds with a returning url.
+ */
+- (void)dialogCompleteWithUrl:(NSURL *)url
+{
+    if (![url query]) {
+        SFDLog(@"User canceled dialog or there was an error");
+        if (_dialogCancelBlock) {
+            _dialogCancelBlock();
+        }
+    } else {
+    
+        NSDictionary *params = [self parseURLParams:[url query]];
+        switch (_currentDialogRequest) {
+            case SFDialogRequestPublish:
+            {
+                NSString *postId = [params valueForKey:@"post_id"];
+                // Successful posts return a post_id
+                if (postId) {
+                    SFDLog(@"Feed post ID: %@", [params valueForKey:@"post_id"]);
+                    if (_dialogSuccessBlock) {
+                        ((SFPublishBlock)_dialogSuccessBlock)(postId);
+                    }
+                }
+                break;
+            }
+//            case kDialogRequestsSendToMany:
+//            case kDialogRequestsSendToSelect:
+//            case kDialogRequestsSendToTarget:
+//            {
+//                // Successful requests return one or more request_ids.
+//                // Get any request IDs, will be in the URL in the form
+//                // request_ids[0]=1001316103543&request_ids[1]=10100303657380180
+//                NSMutableArray *requestIDs = [[NSMutableArray alloc] init];
+//                for (NSString *paramKey in params) {
+//                    if ([paramKey hasPrefix:@"request_ids"]) {
+//                        [requestIDs addObject:[params objectForKey:paramKey]];
+//                    }
+//                }
+//                if ([requestIDs count] > 0) {
+//                    [self showMessage:@"Sent request successfully."];
+//                    NSLog(@"Request ID(s): %@", requestIDs);
+//                }
+//                break;
+//            }
+            default:
+                break;
+        }
+    }
+    
+    [self releaseDialogBlocks];
+}
+
+/**
+ * Called when the dialog is cancelled and is about to be dismissed.
+ */
+- (void)dialogDidNotComplete:(FBDialog *)dialog
+{
+    SFDLog(@"Dialog dismissed.");
+    if (_dialogCancelBlock) {
+        _dialogCancelBlock();
+    }
+    
+    [self releaseDialogBlocks];
+}
+
+/**
+ * Called when dialog failed to load due to an error.
+ */
+- (void)dialog:(FBDialog*)dialog didFailWithError:(NSError *)error
+{
+    SFDLog(@"Error message: %@", [[error userInfo] objectForKey:@"error_msg"]);
+    if (_dialogFailureBlock) {
+        _dialogFailureBlock(error);
+    }
+    
+    [self releaseDialogBlocks];
+}
+
+/**
+ * Asks if a link touched by a user should be opened in an external browser.
+ *
+ * If a user touches a link, the default behavior is to open the link in the Safari browser,
+ * which will cause your app to quit.  You may want to prevent this from happening, open the link
+ * in your own internal browser, or perhaps warn the user that they are about to leave your app.
+ * If so, implement this method on your delegate and return NO.  If you warn the user, you
+ * should hold onto the URL and once you have received their acknowledgement open the URL yourself
+ * using [[UIApplication sharedApplication] openURL:].
+ */
+- (BOOL)dialog:(FBDialog*)dialog shouldOpenURLInExternalBrowser:(NSURL *)url
+{
+    return NO;
+}
+
 
 #pragma mark - UIAlertViewDelegate methods
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex

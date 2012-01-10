@@ -14,17 +14,21 @@
 #import "SFSimpleEventInvite.h"
 #import "SFFacebookRequest.h"
 
-typedef void (^SFDidNotLoginBlock)(BOOL cancelled);
-typedef void (^SFFeedsBlock)(NSArray *posts, NSString *nextPageURL);
 typedef void (^SFFailureBlock)(NSError *error);
 typedef void (^SFBasicBlock)(void);
+typedef void (^SFDidNotLoginBlock)(BOOL cancelled);
+typedef void (^SFFeedsBlock)(NSArray *posts, NSString *nextPageURL);
+typedef void (^SFPublishBlock)(NSString *postId);
 
+typedef enum {
+    SFDialogRequestPublish,  
+} SFDialogRequest;
 
 @protocol SFPostDatasource;
 
 @class SFURLRequest;
 
-@interface SFSocialFacebook : NSObject <FBSessionDelegate, UIAlertViewDelegate> {
+@interface SFSocialFacebook : NSObject <FBSessionDelegate, FBDialogDelegate, UIAlertViewDelegate> {
     
     Facebook            *_facebook;
     NSArray             *_permissions;
@@ -37,6 +41,11 @@ typedef void (^SFBasicBlock)(void);
     SFBasicBlock        _loginBlock;
     SFDidNotLoginBlock  _notLoginBlock;
     SFBasicBlock        _logoutBlock;
+    
+    SFDialogRequest     _currentDialogRequest;
+    id                  _dialogSuccessBlock;
+    SFFailureBlock      _dialogFailureBlock;
+    SFBasicBlock        _dialogCancelBlock;
     
     
 	NSString *facebookUserId;
@@ -73,6 +82,8 @@ typedef void (^SFBasicBlock)(void);
 
 - (SFFacebookRequest *)listProfileFeed:(NSString *)profileId pageSize:(int)postsPerPage needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 - (SFFacebookRequest *)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+
+- (void)publishPost:(SFSimplePost *)post success:(SFPublishBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 - (void)shareFeed:(SFSimplePost *)post;
 - (void)shareFeed:(SFSimplePost *)post WithComment: (NSString *)comment;

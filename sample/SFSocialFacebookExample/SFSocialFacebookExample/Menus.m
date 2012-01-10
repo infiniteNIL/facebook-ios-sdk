@@ -38,7 +38,9 @@ static Menus *_instance;
     
     NSDictionary *menuOption2 = [[NSDictionary alloc] initWithObjectsAndKeys:
                                  @"News feed", @"title", 
-                                 @"", @"controller",
+                                 @"APICallViewController", @"controller",
+                                 @"initWithMenu:", @"selector",
+                                 @"newsFeed", @"arg",
                                  nil];
     
     NSArray *menu = [NSArray arrayWithObjects:
@@ -80,6 +82,29 @@ static Menus *_instance;
     [menuOption0 release];
     [menuOption1 release];
     [menuOption2 release];
+    
+    return menu;
+}
+
+- (NSArray *)newsFeed
+{
+    NSDictionary *menuOption0 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Publish to your wall", @"title", 
+                                 @"publish", @"method",
+                                 nil];
+    
+    NSDictionary *menuOption1 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Publish to friend's wall", @"title", 
+                                 @"publishToFriend", @"method",
+                                 nil];
+    
+    NSArray *menu = [NSArray arrayWithObjects:
+                     menuOption0, 
+                     menuOption1, 
+                     nil];
+    
+    [menuOption0 release];
+    [menuOption1 release];
     
     return menu;
 }
