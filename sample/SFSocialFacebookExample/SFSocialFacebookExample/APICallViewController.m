@@ -166,6 +166,8 @@
     post.postDescription = @"Check out I.ndigo Test App for iOS to learn how you can make your iOS apps social using Facebook Platform.";
     post.link = @"http://www.i.ndigo.com.br/";
     post.picture = @"https://fbcdn-photos-a.akamaihd.net/photos-ak-snc1/v85006/197/198801296855729/app_1_198801296855729_3543.gif";
+    post.actionName = @"I.ndigo Website";
+    post.actionLink = @"http://i.ndigo.com.br";
     
     [[SFSocialFacebook sharedInstance] publishPost:post success:^(NSString *postId) {
         [self showAlertViewWithTitle:nil message:@"Success!"];
@@ -189,6 +191,8 @@
     post.postDescription = @"Check out I.ndigo Test App for iOS to learn how you can make your iOS apps social using Facebook Platform.";
     post.link = @"http://www.i.ndigo.com.br/";
     post.picture = @"https://fbcdn-photos-a.akamaihd.net/photos-ak-snc1/v85006/197/198801296855729/app_1_198801296855729_3543.gif";
+    post.actionName = @"I.ndigo Website";
+    post.actionLink = @"http://i.ndigo.com.br";
     
     [usertTo release];
     

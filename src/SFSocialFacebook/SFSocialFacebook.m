@@ -313,34 +313,40 @@ static SFSocialFacebook *_instance;
         _dialogFailureBlock = [failureBlock copy];
         _dialogCancelBlock = [cancelBlock copy];
         
-        SBJsonWriter *jsonWriter = [[SBJsonWriter new] autorelease];
+        NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
         
-        // The action links to be shown with the post in the feed
-        NSArray *actionLinks = [NSArray arrayWithObjects:[NSDictionary dictionaryWithObjectsAndKeys:
-                                                          @"Get Started",@"name",@"http://m.facebook.com/apps/hackbookios/",@"link", nil], nil];
-        NSString *actionLinksStr = [jsonWriter stringWithObject:actionLinks];
-        // Dialog parameters
-        NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:actionLinksStr, @"actions", nil];
-        NSString *value = nil;
-        NSArray *to = [post to];
-        if ([to count] > 0) {
-            value = [((SFSimpleUser *)[to objectAtIndex:0]) userId];
-            if (value) { [params setObject:value forKey:@"to"]; }
+        if (post) {
+            // The action links to be shown with the post in the feed
+            NSString *actionName = [post actionName];
+            NSString *actionLink = [post actionLink];
+            
+            if (actionName && actionLink) {
+                [params setObject:[NSString stringWithFormat:@"[{name:\"%@\",link:\"%@\"}]", actionName, actionLink] forKey:@"actions"];
+            }
+            
+            // Dialog parameters
+            NSString *value = nil;
+            NSArray *to = [post to];
+            if ([to count] > 0) {
+                value = [((SFSimpleUser *)[to objectAtIndex:0]) userId];
+                if (value) { [params setObject:value forKey:@"to"]; }
+            }
+            value = [post name];
+            if (value) { [params setObject:value forKey:@"name"]; }
+            value = [post caption];
+            if (value) { [params setObject:value forKey:@"caption"]; }
+            value = [post postDescription];
+            if (value) { [params setObject:value forKey:@"description"]; }
+            value = [post link];
+            if (value) { [params setObject:value forKey:@"link"]; }
+            value = [post picture];
+            if (value) { [params setObject:value forKey:@"picture"]; }
+            value = [post source];
+            if (value) { [params setObject:value forKey:@"source"]; }
         }
-        value = [post name];
-        if (value) { [params setObject:value forKey:@"name"]; }
-        value = [post caption];
-        if (value) { [params setObject:value forKey:@"caption"]; }
-        value = [post postDescription];
-        if (value) { [params setObject:value forKey:@"description"]; }
-        value = [post link];
-        if (value) { [params setObject:value forKey:@"link"]; }
-        value = [post picture];
-        if (value) { [params setObject:value forKey:@"picture"]; }
-        value = [post source];
-        if (value) { [params setObject:value forKey:@"source"]; }
         
         [_facebook dialog:@"feed" andParams:params andDelegate:self];
+        [params release];
     }
 }
 

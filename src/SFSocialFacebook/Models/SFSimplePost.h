@@ -31,6 +31,8 @@
 @property(nonatomic, retain) NSDate *createdTime;
 @property(nonatomic, retain) NSDate *updatedTime;
 @property(nonatomic, retain) NSArray *to;
+@property(nonatomic, retain) NSString *actionName;
+@property(nonatomic, retain) NSString *actionLink;
 
 - (BOOL)userLikesIt;
 - (NSString *)getIntervalDescriptionFromCreationDate;

@@ -29,6 +29,8 @@
 @synthesize createdTime;
 @synthesize updatedTime;
 @synthesize to;
+@synthesize actionName;
+@synthesize actionLink;
 
 #pragma mark - Methods
 
