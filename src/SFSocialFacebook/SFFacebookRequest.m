@@ -48,6 +48,7 @@
 {
     self = [self init];
     if (self) {
+        _isFinished = NO;
         _successBlock = [successBlock copy];
         _failureBlock = [failureBlock copy];
         _cancelBlock = [cancelBlock copy];
@@ -58,7 +59,9 @@
             if (needsLogin) {
                 
                 [socialFacebook loginWithSuccess:^{
-                    _request = [[facebook requestWithGraphPath:graphPath andParams:params andHttpMethod:httpMethod andDelegate:self] retain];
+                    if (!_isFinished) {
+                        _request = [[facebook requestWithGraphPath:graphPath andParams:params andHttpMethod:httpMethod andDelegate:self] retain];
+                    }
                 } failure:^(BOOL cancelled) {
                     if (cancelled && cancelBlock) {
                         cancelBlock();
@@ -71,8 +74,10 @@
             } else {
                 
                 [socialFacebook getAppAccessTokenWithSuccess:^(NSString *accessToken) {
-                    [params setObject:accessToken forKey:@"access_token"];
-                    _request = [[facebook requestWithGraphPath:graphPath andParams:params andHttpMethod:httpMethod andDelegate:self] retain];
+                    if (!_isFinished) {
+                        [params setObject:accessToken forKey:@"access_token"];
+                        _request = [[facebook requestWithGraphPath:graphPath andParams:params andHttpMethod:httpMethod andDelegate:self] retain];
+                    }
                 } failure:failureBlock];
             }
         }
@@ -97,13 +102,17 @@
 
 - (void)cancel
 {
-//    [_request cancel];
-    
-    if (_cancelBlock) {
-        _cancelBlock();
+    if (!_isFinished) {
+        if (_request) {
+            [_request cancel];
+        } else {
+            if (_cancelBlock) {
+                _cancelBlock();
+            }
+            
+            [self releaseObjects];
+        }
     }
-    
-    [self releaseObjects];
 }
 
 #pragma mark - Private
@@ -114,6 +123,7 @@
     [_successBlock release], _successBlock = nil;
     [_failureBlock release], _failureBlock = nil;
     [_cancelBlock release], _cancelBlock = nil;
+    _isFinished = YES;
     [self release];
 }
 
@@ -163,7 +173,11 @@
 {
     SFDLog(@"Request cancelled");
     
-    [self cancel];
+    if (_cancelBlock) {
+        _cancelBlock();
+    }
+    
+    [self releaseObjects];
 }
 
 @end

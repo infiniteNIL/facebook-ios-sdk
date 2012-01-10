@@ -10,7 +10,6 @@
 #import "SFUtil.h"
 #import "SBJSON.h"
 #import "SFURLRequest.h"
-#import "SFFacebookRequest.h"
 
 #define GET_FACEBOOK_WITH_AREA @"facebook/getFacebook?area_id="
 

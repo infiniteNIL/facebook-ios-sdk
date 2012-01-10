@@ -12,10 +12,7 @@
 #import "SFUser.h"
 #import "SFSimpleEvent.h"
 #import "SFSimpleEventInvite.h"
-
-#define SF_FEEDS @"feed"
-
-@class SFFacebookRequest;
+#import "SFFacebookRequest.h"
 
 typedef void (^SFDidNotLoginBlock)(BOOL cancelled);
 typedef void (^SFFeedsBlock)(NSArray *posts, NSString *nextPageURL);

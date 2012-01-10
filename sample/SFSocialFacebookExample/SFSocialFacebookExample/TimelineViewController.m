@@ -31,6 +31,7 @@
     [_nextPageURL release];
     [_tableView release];
     [_nextPageButton release];
+    [_facebookRequest release];
     
     [super dealloc];
 }
@@ -88,38 +89,47 @@
     [button setEnabled:NO];
     [_nextPageButton setEnabled:NO];
     
-    SFSocialFacebook *socialFacebook = [SFSocialFacebook sharedInstance];
-    [socialFacebook listProfileFeed:@"stanfordfootball" 
-                                              pageSize:5 
-                                            needsLogin:NO
-                                               success:^(NSArray *posts, NSString *nextPageURL) {
-                                                   [_posts addObjectsFromArray:posts];
-                                                   [_tableView reloadData];
-                                                   [_nextPageURL release];
-                                                   _nextPageURL = [nextPageURL copy];
-                                                   [button setEnabled:YES];
-                                                   [_nextPageButton setEnabled:(_nextPageURL != nil)];
-                                                   [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
-                                               }
-                                               failure:^(NSError *error) {
-                                                   UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:[error localizedDescription] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-                                                   [alert show];
-                                                   [alert release];
-                                                   [button setEnabled:YES];
-                                                   [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
-                                               } cancel:^{
-                                                   UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Request cancelled" message:nil delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-                                                   [alert show];
-                                                   [alert release];
-                                                   [button setEnabled:YES];
-                                                   [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
-                                               }];
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
+    
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] listProfileFeed:@"stanfordfootball" 
+                                                                  pageSize:5 
+                                                                needsLogin:NO
+                                                                   success:^(NSArray *posts, NSString *nextPageURL) {
+                                                                       [_posts addObjectsFromArray:posts];
+                                                                       [_tableView reloadData];
+                                                                       [_nextPageURL release];
+                                                                       _nextPageURL = [nextPageURL copy];
+                                                                       [button setEnabled:YES];
+                                                                       [_nextPageButton setEnabled:(_nextPageURL != nil)];
+                                                                       [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+                                                                   }
+                                                                   failure:^(NSError *error) {
+                                                                       UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:[error localizedDescription] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+                                                                       [alert show];
+                                                                       [alert release];
+                                                                       [button setEnabled:YES];
+                                                                       [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+                                                                   } cancel:^{
+                                                                       UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Request cancelled" message:nil delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+                                                                       [alert show];
+                                                                       [alert release];
+                                                                       [button setEnabled:YES];
+                                                                       [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+                                                                   }] retain];
     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
 }
 
 - (void)nextPageButtonClicked:(UIBarButtonItem *)button
 {
     [button setEnabled:NO];
+    
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
     
     _facebookRequest = [[[SFSocialFacebook sharedInstance] listProfileFeedNextPage:_nextPageURL 
                                                                           success:^(NSArray *posts, NSString *nextPageURL) {

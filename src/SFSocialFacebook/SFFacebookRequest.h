@@ -15,6 +15,7 @@
 @interface SFFacebookRequest : NSObject <FBRequestDelegate> {
     
     FBRequest *_request;
+    BOOL _isFinished;
     
     // Blocks
     void (^_successBlock)(id);
