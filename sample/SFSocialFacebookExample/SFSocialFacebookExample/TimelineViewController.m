@@ -26,12 +26,15 @@
     return self;
 }
 
-- (void)dealloc {
+- (void)dealloc
+{
+    [_facebookRequest cancel];
+    
+    [_facebookRequest release];
     [_posts release];
     [_nextPageURL release];
     [_tableView release];
     [_nextPageButton release];
-    [_facebookRequest release];
     
     [super dealloc];
 }
