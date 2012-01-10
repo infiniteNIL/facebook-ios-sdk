@@ -22,7 +22,7 @@
 @property(nonatomic, retain) NSString *link;
 @property(nonatomic, retain) NSString *name;
 @property(nonatomic, retain) NSString *caption;
-@property(nonatomic, retain) NSString *sDescription;
+@property(nonatomic, retain) NSString *postDescription;
 @property(nonatomic, retain) NSString *source;
 @property(nonatomic, retain) NSString *type;
 @property(nonatomic, retain) NSNumber *numLikes;
@@ -30,6 +30,7 @@
 @property(nonatomic, retain) NSArray *comments;
 @property(nonatomic, retain) NSDate *createdTime;
 @property(nonatomic, retain) NSDate *updatedTime;
+@property(nonatomic, retain) NSArray *to;
 
 - (BOOL)userLikesIt;
 - (NSString *)getIntervalDescriptionFromCreationDate;

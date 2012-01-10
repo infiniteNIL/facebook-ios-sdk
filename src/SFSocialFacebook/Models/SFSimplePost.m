@@ -20,7 +20,7 @@
 @synthesize link;
 @synthesize name;
 @synthesize caption;
-@synthesize sDescription;
+@synthesize postDescription;
 @synthesize source;
 @synthesize type;
 @synthesize numLikes;
@@ -28,6 +28,7 @@
 @synthesize comments;
 @synthesize createdTime;
 @synthesize updatedTime;
+@synthesize to;
 
 #pragma mark - Methods
 
@@ -117,7 +118,7 @@
 	[link release];
 	[name release];
 	[caption release];
-	[sDescription release];
+	[postDescription release];
 	[source release];
 	[type	release];
 	[numLikes release];
@@ -125,6 +126,7 @@
 	[comments release];
     [createdTime release];
     [updatedTime release];
+    [to release];
     
     [super dealloc];
 }

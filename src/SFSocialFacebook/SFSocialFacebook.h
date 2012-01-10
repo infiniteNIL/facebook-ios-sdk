@@ -10,6 +10,7 @@
 #import "FBConnect.h"
 #import "SFSimplePost.h"
 #import "SFUser.h"
+#import "SFSimpleUser.h"
 #import "SFSimpleEvent.h"
 #import "SFSimpleEventInvite.h"
 #import "SFFacebookRequest.h"
@@ -58,8 +59,6 @@ typedef enum {
 	
 	SEL pendingAction;
 	NSMutableDictionary *pendingActionParams;
-	
-    BOOL auxFeedsLastPost;
 }
 
 + (SFSocialFacebook *)sharedInstance;

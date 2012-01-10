@@ -320,15 +320,26 @@ static SFSocialFacebook *_instance;
                                                           @"Get Started",@"name",@"http://m.facebook.com/apps/hackbookios/",@"link", nil], nil];
         NSString *actionLinksStr = [jsonWriter stringWithObject:actionLinks];
         // Dialog parameters
-        NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:
-                                       post.name, @"name",
-                                       post.caption, @"caption",
-                                       post.sDescription, @"description",
-                                       post.link, @"link",
-                                       post.picture, @"picture",
-                                       actionLinksStr, @"actions",
-                                       nil];
-
+        NSMutableDictionary *params = [NSMutableDictionary dictionaryWithObjectsAndKeys:actionLinksStr, @"actions", nil];
+        NSString *value = nil;
+        NSArray *to = [post to];
+        if ([to count] > 0) {
+            value = [((SFSimpleUser *)[to objectAtIndex:0]) userId];
+            if (value) { [params setObject:value forKey:@"to"]; }
+        }
+        value = [post name];
+        if (value) { [params setObject:value forKey:@"name"]; }
+        value = [post caption];
+        if (value) { [params setObject:value forKey:@"caption"]; }
+        value = [post postDescription];
+        if (value) { [params setObject:value forKey:@"description"]; }
+        value = [post link];
+        if (value) { [params setObject:value forKey:@"link"]; }
+        value = [post picture];
+        if (value) { [params setObject:value forKey:@"picture"]; }
+        value = [post source];
+        if (value) { [params setObject:value forKey:@"source"]; }
+        
         [_facebook dialog:@"feed" andParams:params andDelegate:self];
     }
 }
@@ -397,17 +408,6 @@ static SFSocialFacebook *_instance;
         for (id ob in [result objectForKey:@"data"]) {
             post = [[SFSimplePost alloc] init];
             [post setPostId:(NSString *)[ob objectForKey:@"id"]];
-            
-            if ([[post postId] isEqualToString:@"187347617967964_188827637819962"]) {
-                if (auxFeedsLastPost) {
-                    [post release];
-                    break;
-                }
-                else {
-                    auxFeedsLastPost = YES;
-                }				
-            }
-            
             [post setUserId:[[ob objectForKey:@"from"] objectForKey:@"id"]];
             [post setUserName:(NSString *)[[ob objectForKey:@"from"] objectForKey:@"name"]];
             [post setUserImageUrl:[NSString stringWithFormat:@"http://graph.facebook.com/%@/picture", [post userId]]];
@@ -422,12 +422,10 @@ static SFSocialFacebook *_instance;
             
             [post setCreatedTime:[NSDate dateWithTimeIntervalSince1970:[[ob objectForKey:@"created_time"] doubleValue]]];
             [post setUpdatedTime:[NSDate dateWithTimeIntervalSince1970:[[ob objectForKey:@"updated_time"] doubleValue]]];
-            //TODO: Comment
+            //TODO: Comments
             /*
              if ([ob objectForKey:@"comments"] != nil) {
              [post setNumComments:[NSNumber numberWithInt:[[ob objectForKey:@"comments"] objectForKey:@"count"]]];
-             
-             
              }
              */
             
@@ -1317,22 +1315,6 @@ static SFSocialFacebook *_instance;
     
     [self releaseDialogBlocks];
 }
-
-/**
- * Asks if a link touched by a user should be opened in an external browser.
- *
- * If a user touches a link, the default behavior is to open the link in the Safari browser,
- * which will cause your app to quit.  You may want to prevent this from happening, open the link
- * in your own internal browser, or perhaps warn the user that they are about to leave your app.
- * If so, implement this method on your delegate and return NO.  If you warn the user, you
- * should hold onto the URL and once you have received their acknowledgement open the URL yourself
- * using [[UIApplication sharedApplication] openURL:].
- */
-- (BOOL)dialog:(FBDialog*)dialog shouldOpenURLInExternalBrowser:(NSURL *)url
-{
-    return NO;
-}
-
 
 #pragma mark - UIAlertViewDelegate methods
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex

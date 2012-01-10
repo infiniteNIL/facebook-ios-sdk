@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		5B515E7314B5C75B002406D6 /* APICallViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B515E7214B5C75B002406D6 /* APICallViewController.m */; };
 		5B515E9414B5E3C3002406D6 /* Menus.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B515E9314B5E3C3002406D6 /* Menus.m */; };
+		5B515EFE14BCA5C7002406D6 /* SFSimpleUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B515EFD14BCA5C6002406D6 /* SFSimpleUser.m */; };
 		5B9894F014B36E92005B6B4B /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5B9894EF14B36E92005B6B4B /* UIKit.framework */; };
 		5B9894F214B36E92005B6B4B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5B9894F114B36E92005B6B4B /* Foundation.framework */; };
 		5B9894F414B36E92005B6B4B /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5B9894F314B36E92005B6B4B /* CoreGraphics.framework */; };
@@ -48,6 +49,8 @@
 		5B515E9214B5E3C3002406D6 /* Menus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Menus.h; sourceTree = "<group>"; };
 		5B515E9314B5E3C3002406D6 /* Menus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Menus.m; sourceTree = "<group>"; };
 		5B515EB514B72006002406D6 /* SFUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFUtil.h; sourceTree = "<group>"; };
+		5B515EFC14BCA5C6002406D6 /* SFSimpleUser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFSimpleUser.h; sourceTree = "<group>"; };
+		5B515EFD14BCA5C6002406D6 /* SFSimpleUser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFSimpleUser.m; sourceTree = "<group>"; };
 		5B9894EB14B36E92005B6B4B /* SFSocialFacebookExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SFSocialFacebookExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5B9894EF14B36E92005B6B4B /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		5B9894F114B36E92005B6B4B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -260,6 +263,8 @@
 				5B98953914B36EDE005B6B4B /* SFSimplePost.m */,
 				5B98953A14B36EDE005B6B4B /* SFUser.h */,
 				5B98953B14B36EDE005B6B4B /* SFUser.m */,
+				5B515EFC14BCA5C6002406D6 /* SFSimpleUser.h */,
+				5B515EFD14BCA5C6002406D6 /* SFSimpleUser.m */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -354,6 +359,7 @@
 				5B98956714B37010005B6B4B /* TimelineViewController.m in Sources */,
 				5B515E7314B5C75B002406D6 /* APICallViewController.m in Sources */,
 				5B515E9414B5E3C3002406D6 /* Menus.m in Sources */,
+				5B515EFE14BCA5C7002406D6 /* SFSimpleUser.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
