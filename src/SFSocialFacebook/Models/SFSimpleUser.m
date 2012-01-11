@@ -13,4 +13,9 @@
 @synthesize userId;
 @synthesize name;
 
+- (NSString *)pictureUrl
+{
+    return [NSString stringWithFormat:@"http://graph.facebook.com/%@/picture", [self userId]];
+}
+
 @end

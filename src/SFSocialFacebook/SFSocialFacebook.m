@@ -37,6 +37,7 @@
 - (void)clearUserInfo;
 - (NSDictionary *)parseURLParams:(NSString *)query;
 - (void)releaseDialogBlocks;
+- (NSString *)nextPageUrl:(NSDictionary *)paging;
 
 @end
 
@@ -278,9 +279,9 @@ static SFSocialFacebook *_instance;
     return request;
 }
 
-- (SFFacebookRequest *)listProfileFeed:(NSString *)profileId pageSize:(int)postsPerPage needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)listProfileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
-    return [self listProfileFeedWithGraphPath:[NSString stringWithFormat:@"%@/feed?date_format=U&limit=%d", profileId, postsPerPage] needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
+    return [self listProfileFeedWithGraphPath:[NSString stringWithFormat:@"%@/feed?date_format=U&limit=%d", profileId, pageSize] needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
 - (SFFacebookRequest *)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
@@ -350,6 +351,37 @@ static SFSocialFacebook *_instance;
     }
 }
 
+- (SFFacebookRequest *)listFriendsWithPageSize:(NSUInteger)pageSize success:(SFFriendsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    return [self listFriendsNextPage:[NSString stringWithFormat:@"me/friends?limit=%d", pageSize] success:successBlock failure:failureBlock cancel:cancelBlock];
+}
+
+- (SFFacebookRequest *)listFriendsNextPage:(NSString *)nextPageURL success:(SFFriendsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    SFFacebookRequest *request = [self facebookRequestWithGraphPath:[nextPageURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] needsLogin:YES success:^(id result) {
+        
+        SFSimpleUser *user = nil;
+        NSMutableArray *friends = [NSMutableArray array];
+        
+        for (id ob in [result objectForKey:@"data"]) {
+            user = [[SFSimpleUser alloc] init];
+            [user setUserId:[ob objectForKey:@"id"]];
+            [user setName:[ob objectForKey:@"name"]];
+            
+            [friends addObject:user];
+            [user release];
+        }
+        
+        NSString *nextPage = [self nextPageUrl:[result objectForKey:@"paging"]];
+        
+        if (successBlock) {
+            ((SFFriendsBlock)successBlock)(friends, nextPage);
+        }
+    } failure:failureBlock cancel:cancelBlock];
+    
+    return request;
+}
+
 #pragma mark - Private
 
 - (SFFacebookRequest *)facebookRequestWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(void (^)(id))successBlock failure:(void (^)(NSError *))failureBlock cancel:(void (^)())cancelBlock
@@ -405,6 +437,17 @@ static SFSocialFacebook *_instance;
     [_dialogCancelBlock release], _dialogCancelBlock = nil;
 }
 
+- (NSString *)nextPageUrl:(NSDictionary *)paging
+{
+    NSString *nextPageUrl = nil;
+    if (paging) {
+        nextPageUrl = [paging objectForKey:@"next"];
+        int pos = [nextPageUrl rangeOfString:@".com/"].location + 5;
+        nextPageUrl = [nextPageUrl substringFromIndex:pos];
+    }
+    return nextPageUrl;
+}
+
 - (SFFacebookRequest *)listProfileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     SFFacebookRequest *request = [self facebookRequestWithGraphPath:[graphPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] needsLogin:needsLogin success:^(id result) {
@@ -422,7 +465,7 @@ static SFSocialFacebook *_instance;
             [post setLink:[ob objectForKey:@"link"]];
             [post setName:[ob objectForKey:@"name"]];
             [post setCaption:[ob objectForKey:@"caption"]];
-            [post setSDescription:[ob objectForKey:@"description"]];
+            [post setPostDescription:[ob objectForKey:@"description"]];
             [post setSource:[ob objectForKey:@"source"]];
             [post setType:[ob objectForKey:@"type"]];
             
@@ -439,13 +482,8 @@ static SFSocialFacebook *_instance;
             [post release];
         }
         
-        NSString *nextPage = nil;
-        NSDictionary *paging = [result objectForKey:@"paging"];
-        if (paging) {
-            nextPage = (NSString *)[paging objectForKey:@"next"];
-            int pos = [nextPage rangeOfString:@".com/"].location + 5;
-            nextPage = [nextPage substringFromIndex:pos];
-        }
+        NSString *nextPage = [self nextPageUrl:[result objectForKey:@"paging"]];
+        
         if (successBlock) {
             ((SFFeedsBlock)successBlock)(posts, nextPage);
         }
@@ -729,73 +767,6 @@ static SFSocialFacebook *_instance;
 	}
 }
 
-- (void) shareFeed: (SFSimplePost *)post {
-	[self shareFeed:post WithComment:@""];
-}
-
-- (void) shareFeed: (SFSimplePost *)post WithComment: (NSString *)comment {
-	[_delegate retain];
-	if (![_facebook isSessionValid]) {
-		[post retain];
-		[comment retain];
-		if (pendingActionParams != nil) {
-			[pendingActionParams release];
-			pendingActionParams = nil;
-		}
-		pendingAction = @selector(shareFeed:WithComment:);
-		
-		pendingActionParams = [[NSMutableDictionary alloc] init];
-		[pendingActionParams setObject:post forKey:@"post"];
-		[pendingActionParams setObject:comment forKey:@"comment"];
-		[post release];
-		[comment release];
-		
-		[self login];
-	}
-	else {
-		[post retain];
-		[comment retain];
-		NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
-		if ([post message] != nil && ![[post message] isEqualToString:@""]) {
-			[params setObject:[post message] forKey:@"message"];
-		} else if (![comment isEqualToString:@""]) {
-			[params setObject:comment forKey:@"message"];
-		} else {
-			[params setObject:[post sDescription] forKey:@"message"];
-		}
-        
-		
-		if ([post picture] != nil && [[post picture] rangeOfString:@"fbcdn"].length <= 0.0) {
-			[params setObject:[post picture] forKey:@"picture"];
-		}
-		if ([post link] != nil) {
-			[params setObject:[post link] forKey:@"link"];
-		}
-		
-		if ([post name] != nil) {
-			[params setObject:[post name] forKey:@"name"];
-		}
-		
-		if ([post caption] != nil) {
-			[params setObject:[post caption] forKey:@"caption"];
-		}
-		
-		if ([post sDescription] != nil) {
-			[params setObject:[post sDescription] forKey:@"description"];
-		}
-		
-		if ([post source] != nil) {
-			[params setObject:[post source] forKey:@"source"];
-		}
-		[params setObject:_appId forKey:@"app_id"];
-		
-		[_facebook requestWithGraphPath:@"me/feed" andParams:params andHttpMethod:@"POST" andDelegate:self];
-		[post release];
-		[comment release];
-		[params release];
-	}
-}
-
 - (void) createEvent: (SFSimpleEvent *)event {
 	[_delegate retain];
 	if (![_facebook isSessionValid]) {
@@ -881,40 +852,6 @@ static SFSocialFacebook *_instance;
 		[invite release];
 		[pars release];
 	}
-}
-
--(void) listFriendsOfLoggedUser: (int) pageSize {
-	[_delegate retain];
-	if (![_facebook isSessionValid]) {
-		if (pendingActionParams != nil) {
-			[pendingActionParams release];
-			pendingActionParams = nil;
-		}
-		pendingAction = @selector(listFriendsOfLoggedUser:);
-		pendingActionParams = [[NSMutableDictionary	alloc] init];
-		[pendingActionParams setObject:[NSNumber numberWithInt:pageSize] forKey:@"pageSize"];
-		
-		[self login];
-	}
-	else {
-		NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
-		
-		[pars setObject:_appId forKey:@"app_id"];
-		
-		[_facebook requestWithGraphPath:@"me/friends" andParams:pars andDelegate:self];
-		[pars release];
-	}
-}
-
-- (void) listNextPageUser {
-	[_delegate retain];
-    if (nextPageInvited) {
-        [_facebook requestWithGraphPath:nextPageFriends andDelegate:self];
-    } else {
-        if ([_delegate respondsToSelector:@selector(socialFacebook:ReceivedListOfFriends:)]) {
-			[_delegate socialFacebook:self ReceivedListOfFriends:[NSArray array]];
-		}
-    }
 }
 
 - (void) getEvent: (NSString*) eventId {

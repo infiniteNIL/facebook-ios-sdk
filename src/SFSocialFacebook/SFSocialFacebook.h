@@ -18,8 +18,9 @@
 typedef void (^SFFailureBlock)(NSError *error);
 typedef void (^SFBasicBlock)(void);
 typedef void (^SFDidNotLoginBlock)(BOOL cancelled);
-typedef void (^SFFeedsBlock)(NSArray *posts, NSString *nextPageURL);
+typedef void (^SFFeedsBlock)(NSArray *posts, NSString *nextPageUrl);
 typedef void (^SFPublishBlock)(NSString *postId);
+typedef void (^SFFriendsBlock)(NSArray *friends, NSString *nextPageUrl);
 
 typedef enum {
     SFDialogRequestPublish,  
@@ -79,13 +80,13 @@ typedef enum {
 - (void)logoutWithSuccess:(SFBasicBlock)successsBlock;
 - (SFFacebookRequest *)uninstallApp:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
-- (SFFacebookRequest *)listProfileFeed:(NSString *)profileId pageSize:(int)postsPerPage needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)listProfileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 - (SFFacebookRequest *)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 - (void)publishPost:(SFSimplePost *)post success:(SFPublishBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
-- (void)shareFeed:(SFSimplePost *)post;
-- (void)shareFeed:(SFSimplePost *)post WithComment: (NSString *)comment;
+- (SFFacebookRequest *)listFriendsWithPageSize:(NSUInteger)pageSize success:(SFFriendsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)listFriendsNextPage:(NSString *)nextPageURL success:(SFFriendsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 
 //- (id) initWithAppId: (NSString *) applicationId
@@ -115,8 +116,6 @@ typedef enum {
 - (void) createEvent: (SFSimpleEvent *)event;
 - (void) inviteFriendsToEvent: (SFSimpleEventInvite *)invite;
 - (void) performPendingAction;
-- (void) listFriendsOfLoggedUser: (int) pageSize;
-- (void) listNextPageUser;
 - (void) getEvent: (NSString*) eventId;
 - (void) getInvitedUsersForEvent: (NSString *) eventId PageSize: (int) pageSize;
 - (void) listNextPageInvited;

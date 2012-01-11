@@ -181,29 +181,43 @@
 
 - (void)publishToFriend
 {
-    SFSimpleUser *usertTo = [[SFSimpleUser alloc] init];
-    usertTo.userId = @"marcio.massaki";
-    
-    SFSimplePost *post = [[SFSimplePost alloc] init];
-    post.to = [NSArray arrayWithObject:usertTo];
-    post.name = @"I'm using the I.ndigo Test App for iOS app";
-    post.caption = @"I.ndigo Test App for iOS.";
-    post.postDescription = @"Check out I.ndigo Test App for iOS to learn how you can make your iOS apps social using Facebook Platform.";
-    post.link = @"http://www.i.ndigo.com.br/";
-    post.picture = @"https://fbcdn-photos-a.akamaihd.net/photos-ak-snc1/v85006/197/198801296855729/app_1_198801296855729_3543.gif";
-    post.actionName = @"I.ndigo Website";
-    post.actionLink = @"http://i.ndigo.com.br";
-    
-    [usertTo release];
-    
-    [[SFSocialFacebook sharedInstance] publishPost:post success:^(NSString *postId) {
-        [self showAlertViewWithTitle:nil message:@"Success!"];
+    [[SFSocialFacebook sharedInstance] listFriendsWithPageSize:30 success:^(NSArray *friends, NSString *nextPageUrl) {
+        
+        if ([friends count] > 0) {
+            
+            int randomNumber = arc4random() % [friends count];
+            SFSimpleUser *usertTo = [[SFSimpleUser alloc] init];
+            usertTo.userId = [[friends objectAtIndex:randomNumber] userId];
+            
+            SFSimplePost *post = [[SFSimplePost alloc] init];
+            post.to = [NSArray arrayWithObject:usertTo];
+            post.name = @"I'm using the I.ndigo Test App for iOS app";
+            post.caption = @"I.ndigo Test App for iOS.";
+            post.postDescription = @"Check out I.ndigo Test App for iOS to learn how you can make your iOS apps social using Facebook Platform.";
+            post.link = @"http://www.i.ndigo.com.br/";
+            post.picture = @"https://fbcdn-photos-a.akamaihd.net/photos-ak-snc1/v85006/197/198801296855729/app_1_198801296855729_3543.gif";
+            post.actionName = @"I.ndigo Website";
+            post.actionLink = @"http://i.ndigo.com.br";
+            
+            [usertTo release];
+            
+            [[SFSocialFacebook sharedInstance] publishPost:post success:^(NSString *postId) {
+                [self showAlertViewWithTitle:nil message:@"Success!"];
+            } failure:^(NSError *error) {
+                [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+            } cancel:^{
+                [self showAlertViewWithTitle:nil message:@"User cancelled"];
+            }];
+            [post release];
+        } else {
+            [self showAlertViewWithTitle:nil message:@"You do not have any friends to post to."];
+        }
+        
     } failure:^(NSError *error) {
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
     } cancel:^{
-        [self showAlertViewWithTitle:nil message:@"User cancelled"];
+        [self showAlertViewWithTitle:nil message:@"Request cancelled"];
     }];
-    [post release];
 }
 
 @end

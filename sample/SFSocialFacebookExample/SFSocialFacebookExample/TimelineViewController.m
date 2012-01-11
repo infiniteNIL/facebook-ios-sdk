@@ -100,11 +100,11 @@
     _facebookRequest = [[[SFSocialFacebook sharedInstance] listProfileFeed:@"stanfordfootball" 
                                                                   pageSize:5 
                                                                 needsLogin:NO
-                                                                   success:^(NSArray *posts, NSString *nextPageURL) {
+                                                                   success:^(NSArray *posts, NSString *nextPageUrl) {
                                                                        [_posts addObjectsFromArray:posts];
                                                                        [_tableView reloadData];
                                                                        [_nextPageURL release];
-                                                                       _nextPageURL = [nextPageURL copy];
+                                                                       _nextPageURL = [nextPageUrl copy];
                                                                        [button setEnabled:YES];
                                                                        [_nextPageButton setEnabled:(_nextPageURL != nil)];
                                                                        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
@@ -135,11 +135,11 @@
     }
     
     _facebookRequest = [[[SFSocialFacebook sharedInstance] listProfileFeedNextPage:_nextPageURL 
-                                                                          success:^(NSArray *posts, NSString *nextPageURL) {
+                                                                          success:^(NSArray *posts, NSString *nextPageUrl) {
                                                                               [_posts addObjectsFromArray:posts];
                                                                               [_tableView reloadData];
                                                                               [_nextPageURL release];
-                                                                              _nextPageURL = [nextPageURL copy];
+                                                                              _nextPageURL = [nextPageUrl copy];
                                                                               [button setEnabled:(_nextPageURL != nil)];
                                                                               [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
                                                                           } failure:^(NSError *error) {

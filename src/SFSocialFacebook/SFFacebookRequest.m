@@ -117,13 +117,19 @@
 
 #pragma mark - Private
 
+/**
+ * Release retained objects
+ * SHOULD CALL NOTHING AFTER THIS METHOD
+ */
 - (void)releaseObjects
 {
+    _isFinished = YES; // This line must be first
+    
     [_request release], _request = nil;
     [_successBlock release], _successBlock = nil;
     [_failureBlock release], _failureBlock = nil;
     [_cancelBlock release], _cancelBlock = nil;
-    _isFinished = YES;
+    
     [self release];
 }
 
