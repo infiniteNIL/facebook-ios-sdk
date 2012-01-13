@@ -32,7 +32,7 @@
 - (SFFacebookRequest *)facebookRequestWithGraphPath:(NSString *)graphPath params:(NSMutableDictionary *)params needsLogin:(BOOL)needsLogin success:(void (^)(id result))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
 - (SFFacebookRequest *)facebookRequestWithGraphPath:(NSString *)graphPath params:(NSMutableDictionary *)params httpMethod:(NSString *)httpMethod needsLogin:(BOOL)needsLogin success:(void (^)(id result))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
 
-- (SFFacebookRequest *)listProfileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)listProfileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 - (void)clearUserInfo;
 - (NSDictionary *)parseURLParams:(NSString *)query;
@@ -279,17 +279,17 @@ static SFSocialFacebook *_instance;
     return request;
 }
 
-- (SFFacebookRequest *)listProfileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)listProfileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     return [self listProfileFeedWithGraphPath:[NSString stringWithFormat:@"%@/feed?date_format=U&limit=%d", profileId, pageSize] needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
-- (SFFacebookRequest *)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     return [self listProfileFeedWithGraphPath:nextPageURL needsLogin:NO success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
-- (void)publishPost:(SFSimplePost *)post success:(SFPublishBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (void)publishPost:(SFSimplePost *)post success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     if (![_facebook isSessionValid]) {
         [self loginWithSuccess:^{
@@ -351,12 +351,12 @@ static SFSocialFacebook *_instance;
     }
 }
 
-- (SFFacebookRequest *)listFriendsWithPageSize:(NSUInteger)pageSize success:(SFFriendsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)listFriendsWithPageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     return [self listFriendsNextPage:[NSString stringWithFormat:@"me/friends?limit=%d", pageSize] success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
-- (SFFacebookRequest *)listFriendsNextPage:(NSString *)nextPageURL success:(SFFriendsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)listFriendsNextPage:(NSString *)nextPageURL success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     SFFacebookRequest *request = [self facebookRequestWithGraphPath:[nextPageURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] needsLogin:YES success:^(id result) {
         
@@ -375,11 +375,78 @@ static SFSocialFacebook *_instance;
         NSString *nextPage = [self nextPageUrl:[result objectForKey:@"paging"]];
         
         if (successBlock) {
-            ((SFFriendsBlock)successBlock)(friends, nextPage);
+            ((SFListObjectsBlock)successBlock)(friends, nextPage);
         }
     } failure:failureBlock cancel:cancelBlock];
     
     return request;
+}
+
+- (SFFacebookRequest *)createEvent:(SFEvent *)event success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    if (event) {
+        NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
+        
+        NSString *value = [event name];
+        if (value) {
+            [params setObject:value forKey:@"name"];
+        } else {
+            failureBlock(SFError(@"Event name is required"));
+            return nil;
+        }
+        
+        NSDate *date = [event startTime];
+        if (date) {
+            /* Facebook uses only PST TimeZone */
+            NSTimeZone *facebookTimeZone = [NSTimeZone timeZoneWithAbbreviation:@"PST"];
+            NSTimeZone *localTimeZone = [NSTimeZone localTimeZone];
+            NSInteger timeOffset = [localTimeZone secondsFromGMTForDate:date] - [facebookTimeZone secondsFromGMTForDate:date];
+            
+            [params setObject:[NSString stringWithFormat:@"%.0lf" , [[date dateByAddingTimeInterval:timeOffset] timeIntervalSince1970]] forKey:@"start_time"];
+            
+            date = [event endTime];
+            if (date) {
+                timeOffset = timeOffset = [localTimeZone secondsFromGMTForDate:date] - [facebookTimeZone secondsFromGMTForDate:date];
+                [params setObject:[NSString stringWithFormat:@"%.0lf" , [[date dateByAddingTimeInterval:timeOffset] timeIntervalSince1970]] forKey:@"end_time"];
+            }
+            
+        } else {
+            failureBlock(SFError(@"Event start time is required"));
+            return nil;
+        }
+        
+        value = [event eventDescription];
+        if (value) {
+            [params setObject:value forKey:@"description"];
+        }
+        
+        value = [event location];
+        if (value) {
+            [params setObject:value forKey:@"location"];
+        }
+        
+        value = [event privacy];
+        if (value) {
+            [params setObject:value forKey:@"privacy_type"];
+        } else {
+            [params setObject:kSFEventPrivacySecret forKey:@"privacy_type"];
+        }
+        
+        SFFacebookRequest *request = [self facebookRequestWithGraphPath:@"me/events" params:params httpMethod:@"POST" needsLogin:YES success:^(id result) {
+            
+            if (successBlock) {
+                ((SFCreateObjectBlock)successBlock)([result objectForKey:@"id"]);
+            }
+            
+        } failure:failureBlock cancel:cancelBlock];
+        [params release];
+        
+        return request;
+        
+    } else {
+        failureBlock(SFError(@"Event cannot be nil."));
+        return nil;
+    }
 }
 
 #pragma mark - Private
@@ -448,7 +515,7 @@ static SFSocialFacebook *_instance;
     return nextPageUrl;
 }
 
-- (SFFacebookRequest *)listProfileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)listProfileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     SFFacebookRequest *request = [self facebookRequestWithGraphPath:[graphPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] needsLogin:needsLogin success:^(id result) {
         SFSimplePost *post = nil;
@@ -485,7 +552,7 @@ static SFSocialFacebook *_instance;
         NSString *nextPage = [self nextPageUrl:[result objectForKey:@"paging"]];
         
         if (successBlock) {
-            ((SFFeedsBlock)successBlock)(posts, nextPage);
+            ((SFListObjectsBlock)successBlock)(posts, nextPage);
         }
     } failure:failureBlock cancel:cancelBlock];
     
@@ -766,53 +833,6 @@ static SFSocialFacebook *_instance;
 		[pars release];
 	}
 }
-
-- (void) createEvent: (SFSimpleEvent *)event {
-	[_delegate retain];
-	if (![_facebook isSessionValid]) {
-		[event retain];
-		if (pendingActionParams != nil) {
-			[pendingActionParams release];
-			pendingActionParams = nil;
-		}
-		pendingAction = @selector(createEvent:);
-		
-		pendingActionParams = [[NSMutableDictionary alloc] init];
-		[pendingActionParams setObject:event forKey:@"event"];
-		[event release];
-		
-		[self login];
-	}
-	else {
-		[event retain];
-		NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
-		
-		if ([event eventName] != nil) {
-			[pars setObject:[event eventName] forKey:@"name"];
-		}
-		if ([event eventDescription] != nil) {
-			[pars setObject:[event eventDescription] forKey:@"description"];
-		}
-		if ([event eventStartTime] != nil) {
-			[pars setObject:[NSString stringWithFormat:@"%f" ,round([[event eventStartTime] timeIntervalSince1970])] forKey:@"start_time"];
-		}
-		if ([event eventEndTime] != nil) {
-			[pars setObject:[NSString stringWithFormat:@"%f" ,round([[event eventEndTime] timeIntervalSince1970])] forKey:@"end_time"];
-		}
-		if ([event eventLocation] != nil) {
-			[pars setObject:[event eventLocation] forKey:@"location"];
-		}
-		[pars setObject:@"SECRET" forKey:@"privacy_type"];
-		[pars setObject:_appId forKey:@"app_id"];
-		
-		//NSLog(@"Parameters: %@", pars);
-		
-		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"me/events", loggedUserId] andParams:pars andHttpMethod:@"POST" andDelegate:self];
-		[event release];
-		[pars release];
-	}
-}
-
 
 - (void) inviteFriendsToEvent: (SFSimpleEventInvite *)invite {
 	[_delegate retain];
@@ -1201,7 +1221,7 @@ static SFSocialFacebook *_instance;
                 if (postId) {
                     SFDLog(@"Feed post ID: %@", [params valueForKey:@"post_id"]);
                     if (_dialogSuccessBlock) {
-                        ((SFPublishBlock)_dialogSuccessBlock)(postId);
+                        ((SFCreateObjectBlock)_dialogSuccessBlock)(postId);
                     }
                 }
                 break;

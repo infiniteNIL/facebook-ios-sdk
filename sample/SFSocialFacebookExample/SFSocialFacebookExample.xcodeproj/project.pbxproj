@@ -33,7 +33,7 @@
 		5B98955314B36EDE005B6B4B /* SBJsonTokeniser.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B98952B14B36EDE005B6B4B /* SBJsonTokeniser.m */; };
 		5B98955414B36EDE005B6B4B /* SBJsonUTF8Stream.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B98952D14B36EDE005B6B4B /* SBJsonUTF8Stream.m */; };
 		5B98955514B36EDE005B6B4B /* SBJsonWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B98952F14B36EDE005B6B4B /* SBJsonWriter.m */; };
-		5B98955714B36EDE005B6B4B /* SFSimpleEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B98953514B36EDE005B6B4B /* SFSimpleEvent.m */; };
+		5B98955714B36EDE005B6B4B /* SFEvent.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B98953514B36EDE005B6B4B /* SFEvent.m */; };
 		5B98955814B36EDE005B6B4B /* SFSimpleEventInvite.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B98953714B36EDE005B6B4B /* SFSimpleEventInvite.m */; };
 		5B98955914B36EDE005B6B4B /* SFSimplePost.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B98953914B36EDE005B6B4B /* SFSimplePost.m */; };
 		5B98955A14B36EDE005B6B4B /* SFUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B98953B14B36EDE005B6B4B /* SFUser.m */; };
@@ -97,8 +97,8 @@
 		5B98952D14B36EDE005B6B4B /* SBJsonUTF8Stream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonUTF8Stream.m; sourceTree = "<group>"; };
 		5B98952E14B36EDE005B6B4B /* SBJsonWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBJsonWriter.h; sourceTree = "<group>"; };
 		5B98952F14B36EDE005B6B4B /* SBJsonWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBJsonWriter.m; sourceTree = "<group>"; };
-		5B98953414B36EDE005B6B4B /* SFSimpleEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFSimpleEvent.h; sourceTree = "<group>"; };
-		5B98953514B36EDE005B6B4B /* SFSimpleEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFSimpleEvent.m; sourceTree = "<group>"; };
+		5B98953414B36EDE005B6B4B /* SFEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFEvent.h; sourceTree = "<group>"; };
+		5B98953514B36EDE005B6B4B /* SFEvent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFEvent.m; sourceTree = "<group>"; };
 		5B98953614B36EDE005B6B4B /* SFSimpleEventInvite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFSimpleEventInvite.h; sourceTree = "<group>"; };
 		5B98953714B36EDE005B6B4B /* SFSimpleEventInvite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SFSimpleEventInvite.m; sourceTree = "<group>"; };
 		5B98953814B36EDE005B6B4B /* SFSimplePost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SFSimplePost.h; sourceTree = "<group>"; };
@@ -255,8 +255,8 @@
 		5B98953114B36EDE005B6B4B /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				5B98953414B36EDE005B6B4B /* SFSimpleEvent.h */,
-				5B98953514B36EDE005B6B4B /* SFSimpleEvent.m */,
+				5B98953414B36EDE005B6B4B /* SFEvent.h */,
+				5B98953514B36EDE005B6B4B /* SFEvent.m */,
 				5B98953614B36EDE005B6B4B /* SFSimpleEventInvite.h */,
 				5B98953714B36EDE005B6B4B /* SFSimpleEventInvite.m */,
 				5B98953814B36EDE005B6B4B /* SFSimplePost.h */,
@@ -349,7 +349,7 @@
 				5B98955314B36EDE005B6B4B /* SBJsonTokeniser.m in Sources */,
 				5B98955414B36EDE005B6B4B /* SBJsonUTF8Stream.m in Sources */,
 				5B98955514B36EDE005B6B4B /* SBJsonWriter.m in Sources */,
-				5B98955714B36EDE005B6B4B /* SFSimpleEvent.m in Sources */,
+				5B98955714B36EDE005B6B4B /* SFEvent.m in Sources */,
 				5B98955814B36EDE005B6B4B /* SFSimpleEventInvite.m in Sources */,
 				5B98955914B36EDE005B6B4B /* SFSimplePost.m in Sources */,
 				5B98955A14B36EDE005B6B4B /* SFUser.m in Sources */,

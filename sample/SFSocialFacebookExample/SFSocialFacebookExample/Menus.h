@@ -15,4 +15,6 @@
 - (NSArray *)main;
 - (NSArray *)login;
 - (NSArray *)newsFeed;
+- (NSArray *)events;
+
 @end

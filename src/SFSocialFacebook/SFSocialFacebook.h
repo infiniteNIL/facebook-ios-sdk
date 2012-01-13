@@ -11,16 +11,15 @@
 #import "SFSimplePost.h"
 #import "SFUser.h"
 #import "SFSimpleUser.h"
-#import "SFSimpleEvent.h"
+#import "SFEvent.h"
 #import "SFSimpleEventInvite.h"
 #import "SFFacebookRequest.h"
 
 typedef void (^SFFailureBlock)(NSError *error);
 typedef void (^SFBasicBlock)(void);
 typedef void (^SFDidNotLoginBlock)(BOOL cancelled);
-typedef void (^SFFeedsBlock)(NSArray *posts, NSString *nextPageUrl);
-typedef void (^SFPublishBlock)(NSString *postId);
-typedef void (^SFFriendsBlock)(NSArray *friends, NSString *nextPageUrl);
+typedef void (^SFListObjectsBlock)(NSArray *objects, NSString *nextPageUrl);
+typedef void (^SFCreateObjectBlock)(NSString *objectId);
 
 typedef enum {
     SFDialogRequestPublish,  
@@ -80,13 +79,17 @@ typedef enum {
 - (void)logoutWithSuccess:(SFBasicBlock)successsBlock;
 - (SFFacebookRequest *)uninstallApp:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
-- (SFFacebookRequest *)listProfileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
-- (SFFacebookRequest *)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFFeedsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)listProfileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
-- (void)publishPost:(SFSimplePost *)post success:(SFPublishBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (void)publishPost:(SFSimplePost *)post success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
-- (SFFacebookRequest *)listFriendsWithPageSize:(NSUInteger)pageSize success:(SFFriendsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
-- (SFFacebookRequest *)listFriendsNextPage:(NSString *)nextPageURL success:(SFFriendsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)listFriendsWithPageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)listFriendsNextPage:(NSString *)nextPageURL success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+
+- (SFFacebookRequest *)createEvent:(SFEvent *)event success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)inviteFriendsToEvent:(SFSimpleEventInvite *)invite;
+- (SFFacebookRequest *)invitedUsersForEvent:(NSString *)eventId pageSize:(NSUInteger)pageSize;
 
 
 //- (id) initWithAppId: (NSString *) applicationId
@@ -113,11 +116,8 @@ typedef enum {
 - (void) fillUser: (SFUser *)user WithId: (NSString *)userId Target:(id)target AndSelector:(SEL)didFinish;
 - (void) fillUser: (SFUser *)user Target:(id)target AndSelector:(SEL)didFinish;
 
-- (void) createEvent: (SFSimpleEvent *)event;
-- (void) inviteFriendsToEvent: (SFSimpleEventInvite *)invite;
 - (void) performPendingAction;
 - (void) getEvent: (NSString*) eventId;
-- (void) getInvitedUsersForEvent: (NSString *) eventId PageSize: (int) pageSize;
 - (void) listNextPageInvited;
 - (void) eventMarkAttending: (NSString *)eventId;
 - (void) getNumLikesFromPage: (NSString *)pageId;
@@ -138,7 +138,7 @@ typedef enum {
 - (void) socialFacebookDidSendInvitationToEvent: (SFSocialFacebook *)facebook;
 - (void) socialFacebookDidAttendingEvent: (SFSocialFacebook *)facebook;
 - (void) socialFacebookDidLike: (SFSocialFacebook *)facebook;
-- (void) socialFacebook: (SFSocialFacebook *)facebook DidReceiveEvent: (SFSimpleEvent *)event;
+- (void) socialFacebook: (SFSocialFacebook *)facebook DidReceiveEvent: (SFEvent *)event;
 - (void) socialFacebook: (SFSocialFacebook *)facebook DidReceivedInvitedUsersList: (NSArray *)invitedUsers;
 - (void) socialFacebook: (SFSocialFacebook *)facebook DidReceiveNumberOfLikes: (NSString *)likes;
 - (void) socialFacebookDidLogin;

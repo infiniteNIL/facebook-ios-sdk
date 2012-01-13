@@ -43,15 +43,24 @@ static Menus *_instance;
                                  @"newsFeed", @"arg",
                                  nil];
     
+    NSDictionary *menuOption3 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Events", @"title", 
+                                 @"APICallViewController", @"controller",
+                                 @"initWithMenu:", @"selector",
+                                 @"events", @"arg",
+                                 nil];
+    
     NSArray *menu = [NSArray arrayWithObjects:
                      menuOption0, 
                      menuOption1, 
                      menuOption2,
+                     menuOption3,
                      nil];
     
     [menuOption0 release];
     [menuOption1 release];
     [menuOption2 release];
+    [menuOption3 release];
     
     return menu;
 }
@@ -96,6 +105,29 @@ static Menus *_instance;
     NSDictionary *menuOption1 = [[NSDictionary alloc] initWithObjectsAndKeys:
                                  @"Publish to friend's wall", @"title", 
                                  @"publishToFriend", @"method",
+                                 nil];
+    
+    NSArray *menu = [NSArray arrayWithObjects:
+                     menuOption0, 
+                     menuOption1, 
+                     nil];
+    
+    [menuOption0 release];
+    [menuOption1 release];
+    
+    return menu;
+}
+
+- (NSArray *)events
+{
+    NSDictionary *menuOption0 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Create an event", @"title", 
+                                 @"createEvent", @"method",
+                                 nil];
+    
+    NSDictionary *menuOption1 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Invite Friends", @"title", 
+                                 @"inviteFriends", @"method",
                                  nil];
     
     NSArray *menu = [NSArray arrayWithObjects:

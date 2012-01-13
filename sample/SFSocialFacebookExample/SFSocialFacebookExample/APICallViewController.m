@@ -18,6 +18,8 @@
 - (void)uninstallApp;
 - (void)publish;
 - (void)publishToFriend;
+- (void)createEvent;
+- (void)inviteFriends;
 
 @end
 
@@ -184,7 +186,7 @@
     [[SFSocialFacebook sharedInstance] listFriendsWithPageSize:30 success:^(NSArray *friends, NSString *nextPageUrl) {
         
         if ([friends count] > 0) {
-            
+                        
             int randomNumber = arc4random() % [friends count];
             SFSimpleUser *usertTo = [[SFSimpleUser alloc] init];
             usertTo.userId = [[friends objectAtIndex:randomNumber] userId];
@@ -218,6 +220,35 @@
     } cancel:^{
         [self showAlertViewWithTitle:nil message:@"Request cancelled"];
     }];
+}
+
+- (void)createEvent
+{
+    SFEvent *event = [[SFEvent alloc] init];
+    event.name = @"Social Facebook iOS Event Test";
+    NSDate *startTime = [[NSDate alloc] initWithTimeIntervalSinceNow:(60*60*24)]; // One day from now
+    event.startTime = startTime;
+    event.endTime = [startTime dateByAddingTimeInterval:(60*60*4)]; // 4 hours duration
+    event.eventDescription = @"Event created by SFSocialFacebook";
+    event.location = @"I.ndigo";
+    event.privacy = kSFEventPrivacySecret;
+    
+    [startTime release];
+    
+    [[SFSocialFacebook sharedInstance] createEvent:event success:^(NSString *objectId) {
+        [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Event id: %@", objectId]];
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"Create event request cancelled"];
+    }];
+    
+    [event release];
+}
+
+- (void)inviteFriends
+{
+    
 }
 
 @end

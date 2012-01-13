@@ -8,9 +8,20 @@
 
 #import <Foundation/Foundation.h>
 
+typedef enum
+{
+    SFUserPictureTypeSquare,
+    SFUserPictureTypeSmall,
+    SFUserPictureTypeNormal,
+    SFUserPictureTypeLarge,
+} SFUserPictureType;
+
 @interface SFSimpleUser : NSObject
 
 @property(nonatomic, retain) NSString *userId;
 @property(nonatomic, retain) NSString *name;
+
+- (NSString *)pictureUrl;
+- (NSString *)pictureUrlWithType:(SFUserPictureType)type;
 
 @end
