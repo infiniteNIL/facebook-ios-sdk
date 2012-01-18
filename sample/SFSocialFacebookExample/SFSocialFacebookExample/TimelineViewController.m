@@ -3,7 +3,7 @@
 //  SFSocialFacebookExample
 //
 //  Created by Massaki on 1/3/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+//  Copyright (c) 2012 I.ndigo. All rights reserved.
 //
 
 #import "TimelineViewController.h"
@@ -97,7 +97,7 @@
         [_facebookRequest release];
     }
     
-    _facebookRequest = [[[SFSocialFacebook sharedInstance] listProfileFeed:@"stanfordfootball" 
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] profileFeed:@"stanfordfootball" 
                                                                   pageSize:5 
                                                                 needsLogin:NO
                                                                    success:^(NSArray *posts, NSString *nextPageUrl) {
@@ -134,7 +134,7 @@
         [_facebookRequest release];
     }
     
-    _facebookRequest = [[[SFSocialFacebook sharedInstance] listProfileFeedNextPage:_nextPageURL 
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] profileFeedNextPage:_nextPageURL 
                                                                           success:^(NSArray *posts, NSString *nextPageUrl) {
                                                                               [_posts addObjectsFromArray:posts];
                                                                               [_tableView reloadData];

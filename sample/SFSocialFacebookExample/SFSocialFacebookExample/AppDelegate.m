@@ -3,7 +3,7 @@
 //  SFSocialFacebookExample
 //
 //  Created by Massaki on 1/3/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+//  Copyright (c) 2012 I.ndigo. All rights reserved.
 //
 
 #import "AppDelegate.h"
@@ -22,7 +22,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    NSArray *permissions = [[NSArray alloc] initWithObjects:@"create_event", nil];
+    NSArray *permissions = [[NSArray alloc] initWithObjects:@"create_event, user_events", nil];
     _socialFacebook = [SFSocialFacebook sharedInstanceWithAppId:@"198801296855729" appSecret:@"abe6ebce8a657c18c748887d9d480265" urlSchemeSuffix:nil andPermissions:permissions];
     [permissions release];
     

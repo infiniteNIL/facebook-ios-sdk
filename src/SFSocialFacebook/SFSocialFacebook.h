@@ -1,18 +1,16 @@
 //
 //  SFSocialFacebook.h
-//  POCShareComponent
+//  SFSocialFacebook
 //
-//  Created by Bruno Toshio Sugano on 2/16/11.
-//  Copyright 2011 I.ndigo. All rights reserved.
+//  Created by Massaki on 11/1/11.
+//  Copyright (c) 2011 I.ndigo. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
 #import "FBConnect.h"
 #import "SFSimplePost.h"
-#import "SFUser.h"
 #import "SFSimpleUser.h"
 #import "SFEvent.h"
-#import "SFSimpleEventInvite.h"
 #import "SFFacebookRequest.h"
 
 typedef void (^SFFailureBlock)(NSError *error);
@@ -48,12 +46,12 @@ typedef enum {
     SFFailureBlock      _dialogFailureBlock;
     SFBasicBlock        _dialogCancelBlock;
     
+    NSDateFormatter     *_dateFormatter;
+    NSTimeZone          *_facebookTimeZone;
+    NSTimeZone          *_localTimeZone;
     
 	NSString *facebookUserId;
     int areaId;
-	
-	NSString *nextPageFriends;
-	NSString *nextPageInvited;
 	
     NSString *shingleServerPath;
 	
@@ -64,8 +62,6 @@ typedef enum {
 + (SFSocialFacebook *)sharedInstance;
 + (SFSocialFacebook *)sharedInstanceWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix andPermissions:(NSArray *)permissions;
 
-
-@property (nonatomic, assign) id<SFPostDatasource> delegate;
 
 @property (nonatomic, retain) NSString *facebookUserId;
 @property (nonatomic, retain) NSString *loggedUserId;
@@ -79,70 +75,34 @@ typedef enum {
 - (void)logoutWithSuccess:(SFBasicBlock)successsBlock;
 - (SFFacebookRequest *)uninstallApp:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
-- (SFFacebookRequest *)listProfileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
-- (SFFacebookRequest *)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)profileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)profileFeedNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 - (void)publishPost:(SFSimplePost *)post success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 - (SFFacebookRequest *)listFriendsWithPageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
-- (SFFacebookRequest *)listFriendsNextPage:(NSString *)nextPageURL success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)listFriendsNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
+/** requires user_events permission **/
+- (SFFacebookRequest *)listEventsWithPageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)listEventsNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+
+/** requires create_event permission **/
 - (SFFacebookRequest *)createEvent:(SFEvent *)event success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
-- (SFFacebookRequest *)inviteFriendsToEvent:(SFSimpleEventInvite *)invite;
-- (SFFacebookRequest *)invitedUsersForEvent:(NSString *)eventId pageSize:(NSUInteger)pageSize;
+- (SFFacebookRequest *)inviteUsers:(NSArray *)userIds toEvent:(NSString *)eventId success:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
-
-//- (id) initWithAppId: (NSString *) applicationId
-//andAuthorizationSingleton: (SFAuthorization *) authorizationSingleton
-//         andDelegate:(id)_delegate;
-//
-//- (id) initWithAppId: (NSString *) applicationId
-//           andAreaId: (int) area_Id
-//andAuthorizationSingleton: (SFAuthorization *) authorizationSingleton
-//andShingleServerPath: (NSString *) shinglePath
-//         andDelegate:(id)_delegate;
-//- (void) setAppId: (NSString *) applicationId
-//        andAreaId: (int) area_Id
-//andAuthorizationSingleton: (SFAuthorization *) authorizationSingleton
-//andShingleServerPath: (NSString *) shinglePath
-//      andDelegate:(id)_delegate;
-
-
-- (void) listAreaFeedsWithPostsPerPage: (int)postsPerPage;
+/** requires user_events permission **/
+- (SFFacebookRequest *)invitedUsersForEvent:(NSString *)eventId pageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)invitedUsersForEvent:(NSString *)eventId rsvpStatus:(SFUserRSVPStatus)rsvpStatus pageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)invitedUsersNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 - (void) handleLike: (NSString *) postId;
 //- (void) handleComment: (NSString *) comment InPost: (NSString *) postId;
 //- (void) handleUnlike: (NSString *) postId;
-- (void) fillUser: (SFUser *)user WithId: (NSString *)userId Target:(id)target AndSelector:(SEL)didFinish;
-- (void) fillUser: (SFUser *)user Target:(id)target AndSelector:(SEL)didFinish;
 
-- (void) performPendingAction;
 - (void) getEvent: (NSString*) eventId;
-- (void) listNextPageInvited;
 - (void) eventMarkAttending: (NSString *)eventId;
 - (void) getNumLikesFromPage: (NSString *)pageId;
 - (void) getAccessTokenWithClientId:(NSString*)client_id andClientSecret:(NSString*)client_secret;
 
-- (NSDate*) parseToDate:(NSString *) string;
-
-@end
-
-
-@protocol SFPostDatasource<NSObject>
-
-@optional
-
-- (void) socialFacebook: (SFSocialFacebook *)facebook ReceivedListOfFriends: (NSArray *)friends;
-- (void) socialFacebook: (SFSocialFacebook *)facebook DidSharePost: (NSString *)postId;
-- (void) socialFacebook: (SFSocialFacebook *)facebook DidCreateEventWithId: (NSString *)eventId;
-- (void) socialFacebookDidSendInvitationToEvent: (SFSocialFacebook *)facebook;
-- (void) socialFacebookDidAttendingEvent: (SFSocialFacebook *)facebook;
-- (void) socialFacebookDidLike: (SFSocialFacebook *)facebook;
-- (void) socialFacebook: (SFSocialFacebook *)facebook DidReceiveEvent: (SFEvent *)event;
-- (void) socialFacebook: (SFSocialFacebook *)facebook DidReceivedInvitedUsersList: (NSArray *)invitedUsers;
-- (void) socialFacebook: (SFSocialFacebook *)facebook DidReceiveNumberOfLikes: (NSString *)likes;
-- (void) socialFacebookDidLogin;
-- (void) socialFacebookDidCancelLogin;
-- (void) socialFacebookDidReceiveConfiguration;
-- (void) socialFacebookDidFailReceivingConfiguration;
 @end

@@ -1,9 +1,9 @@
 //
 //  SFSocialFacebook.m
-//  POCShareComponent
+//  SFSocialFacebook
 //
-//  Created by Bruno Toshio Sugano on 2/16/11.
-//  Copyright 2011 I.ndigo. All rights reserved.
+//  Created by Massaki on 11/1/11.
+//  Copyright (c) 2011 I.ndigo. All rights reserved.
 //
 
 #import "SFSocialFacebook.h"
@@ -39,16 +39,17 @@
 - (void)releaseDialogBlocks;
 - (NSString *)nextPageUrl:(NSDictionary *)paging;
 
+- (NSDate *)dateWithFacebookUnixTimestamp:(NSTimeInterval)unixTimestamp;
+- (NSTimeInterval)facebookUnixTimestampFromDate:(NSDate *)date;
+
 @end
 
 
 @implementation SFSocialFacebook
 
-@synthesize delegate = _delegate;
-
-
 @synthesize facebookUserId;
 @synthesize loggedUserId;
+
 
 #pragma mark - Singleton implementation
 
@@ -105,11 +106,27 @@ static SFSocialFacebook *_instance;
     return self;
 }
 
+#pragma mark -
+
+- (id)init
+{
+    self = [super init];
+    if (self) {
+        _dateFormatter = [[NSDateFormatter alloc] init];
+        [_dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+        
+        _localTimeZone = [[NSTimeZone localTimeZone] retain];
+        _facebookTimeZone = [[NSTimeZone timeZoneWithAbbreviation:@"PST"] retain];
+    }
+    
+    return self;
+}
+
 #pragma mark - Private Constructor
 
 - (id)initWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix andPermissions:(NSArray *)permissions
 {
-    self = [super init];
+    self = [self init];
     if (self) {
         _permissions = [permissions retain];
         
@@ -279,14 +296,14 @@ static SFSocialFacebook *_instance;
     return request;
 }
 
-- (SFFacebookRequest *)listProfileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)profileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     return [self listProfileFeedWithGraphPath:[NSString stringWithFormat:@"%@/feed?date_format=U&limit=%d", profileId, pageSize] needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
-- (SFFacebookRequest *)listProfileFeedNextPage:(NSString *)nextPageURL success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)profileFeedNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
-    return [self listProfileFeedWithGraphPath:nextPageURL needsLogin:NO success:successBlock failure:failureBlock cancel:cancelBlock];
+    return [self listProfileFeedWithGraphPath:nextPageUrl needsLogin:NO success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
 - (void)publishPost:(SFSimplePost *)post success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
@@ -329,7 +346,7 @@ static SFSocialFacebook *_instance;
             NSString *value = nil;
             NSArray *to = [post to];
             if ([to count] > 0) {
-                value = [((SFSimpleUser *)[to objectAtIndex:0]) userId];
+                value = [((SFSimpleUser *)[to objectAtIndex:0]) objectId];
                 if (value) { [params setObject:value forKey:@"to"]; }
             }
             value = [post name];
@@ -356,16 +373,16 @@ static SFSocialFacebook *_instance;
     return [self listFriendsNextPage:[NSString stringWithFormat:@"me/friends?limit=%d", pageSize] success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
-- (SFFacebookRequest *)listFriendsNextPage:(NSString *)nextPageURL success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)listFriendsNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
-    SFFacebookRequest *request = [self facebookRequestWithGraphPath:[nextPageURL stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] needsLogin:YES success:^(id result) {
+    SFFacebookRequest *request = [self facebookRequestWithGraphPath:[nextPageUrl stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] needsLogin:YES success:^(id result) {
         
         SFSimpleUser *user = nil;
-        NSMutableArray *friends = [NSMutableArray array];
+        NSMutableArray *friends = [[NSMutableArray alloc] init];
         
         for (id ob in [result objectForKey:@"data"]) {
             user = [[SFSimpleUser alloc] init];
-            [user setUserId:[ob objectForKey:@"id"]];
+            [user setObjectId:[ob objectForKey:@"id"]];
             [user setName:[ob objectForKey:@"name"]];
             
             [friends addObject:user];
@@ -377,6 +394,45 @@ static SFSocialFacebook *_instance;
         if (successBlock) {
             ((SFListObjectsBlock)successBlock)(friends, nextPage);
         }
+        [friends release];
+        
+    } failure:failureBlock cancel:cancelBlock];
+    
+    return request;
+}
+
+- (SFFacebookRequest *)listEventsWithPageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    return [self listEventsNextPage:[NSString stringWithFormat:@"me/events?fields=id,name,start_time,end_time,location&date_format=U&limit=%d", pageSize] success:successBlock failure:failureBlock cancel:cancelBlock];
+}
+
+- (SFFacebookRequest *)listEventsNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    SFFacebookRequest *request = [self facebookRequestWithGraphPath:nextPageUrl needsLogin:YES success:^(id result) {
+        
+        SFEvent *event = nil;
+        NSMutableArray *events = [[NSMutableArray alloc] init];
+        
+        for (id ob in [result objectForKey:@"data"]) {
+            event = [[SFEvent alloc] init];
+            [event setObjectId:[ob objectForKey:@"id"]];
+            [event setName:[ob objectForKey:@"name"]];
+            [event setStartTime:[self dateWithFacebookUnixTimestamp:[[ob objectForKey:@"start_time"] doubleValue]]];
+            [event setEndTime:[self dateWithFacebookUnixTimestamp:[[ob objectForKey:@"end_time"] doubleValue]]];
+            [event setLocation:[ob objectForKey:@"location"]];
+            
+            [events addObject:event];
+            [event release];
+        }
+        
+        NSString *nextPage = [self nextPageUrl:[result objectForKey:@"paging"]];
+        
+        if (successBlock) {
+            ((SFListObjectsBlock)successBlock)(events, nextPage);
+        }
+        [events release];
+
+        
     } failure:failureBlock cancel:cancelBlock];
     
     return request;
@@ -397,17 +453,11 @@ static SFSocialFacebook *_instance;
         
         NSDate *date = [event startTime];
         if (date) {
-            /* Facebook uses only PST TimeZone */
-            NSTimeZone *facebookTimeZone = [NSTimeZone timeZoneWithAbbreviation:@"PST"];
-            NSTimeZone *localTimeZone = [NSTimeZone localTimeZone];
-            NSInteger timeOffset = [localTimeZone secondsFromGMTForDate:date] - [facebookTimeZone secondsFromGMTForDate:date];
-            
-            [params setObject:[NSString stringWithFormat:@"%.0lf" , [[date dateByAddingTimeInterval:timeOffset] timeIntervalSince1970]] forKey:@"start_time"];
+            [params setObject:[NSString stringWithFormat:@"%.0lf" , [self facebookUnixTimestampFromDate:date]] forKey:@"start_time"];
             
             date = [event endTime];
             if (date) {
-                timeOffset = timeOffset = [localTimeZone secondsFromGMTForDate:date] - [facebookTimeZone secondsFromGMTForDate:date];
-                [params setObject:[NSString stringWithFormat:@"%.0lf" , [[date dateByAddingTimeInterval:timeOffset] timeIntervalSince1970]] forKey:@"end_time"];
+                [params setObject:[NSString stringWithFormat:@"%.0lf" , [self facebookUnixTimestampFromDate:date]] forKey:@"end_time"];
             }
             
         } else {
@@ -447,6 +497,100 @@ static SFSocialFacebook *_instance;
         failureBlock(SFError(@"Event cannot be nil."));
         return nil;
     }
+}
+
+- (SFFacebookRequest *)inviteUsers:(NSArray *)userIds toEvent:(NSString *)eventId success:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
+    [params setObject:[userIds componentsJoinedByString:@","] forKey:@"users"];
+    
+    SFFacebookRequest *request = [self facebookRequestWithGraphPath:[NSString stringWithFormat:@"%@/invited", eventId] params:params httpMethod:@"POST" needsLogin:YES success:^(id result) {
+        
+        if (successBlock) {
+            ((SFBasicBlock)successBlock)();
+        }
+        
+    } failure:failureBlock cancel:cancelBlock];
+    [params release];
+    
+    return request;
+}
+
+- (SFFacebookRequest *)invitedUsersForEvent:(NSString *)eventId pageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    return [self invitedUsersForEvent:eventId rsvpStatus:SFUserRSVPStatusUnknown pageSize:pageSize success:successBlock failure:failureBlock cancel:cancelBlock];
+}
+
+- (SFFacebookRequest *)invitedUsersForEvent:(NSString *)eventId rsvpStatus:(SFUserRSVPStatus)rsvpStatus pageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    NSString *inviteeType = nil;
+    
+    switch (rsvpStatus) {
+        case SFUserRSVPStatusUnknown:
+            inviteeType = @"invited";
+            break;
+        case SFUserRSVPStatusAttending:
+            inviteeType = @"attending";
+            break;
+        case SFUserRSVPStatusMaybe:
+            inviteeType = @"maybe";
+            break;
+        case SFUserRSVPStatusDeclined:
+            inviteeType = @"declined";
+            break;
+        case SFUserRSVPStatusNotReplied:
+            inviteeType = @"noreply";
+            break;
+        default:
+            break;
+    }
+    
+    return [self invitedUsersNextPage:[NSString stringWithFormat:@"%@/%@?limit=%d", eventId, inviteeType, pageSize] success:successBlock failure:failureBlock cancel:cancelBlock];
+}
+
+- (SFFacebookRequest *)invitedUsersNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    SFFacebookRequest *request = [self facebookRequestWithGraphPath:nextPageUrl needsLogin:YES success:^(id result) {
+        
+		SFSimpleUser *user;
+		NSMutableArray *users = [[NSMutableArray alloc] init];
+		
+		for (id ob in [result objectForKey:@"data"]) {
+			user = [[SFSimpleUser alloc] init];
+			[user setObjectId:[ob objectForKey:@"id"]];
+			[user setName:[ob objectForKey:@"name"]];
+            
+            NSString *rsvpStatus = [ob objectForKey:@"rsvp_status"];
+            
+            if (rsvpStatus != nil) {
+                if ([rsvpStatus isEqualToString:@"not_replied"]) {
+                    [user setRsvpStatus:SFUserRSVPStatusNotReplied];
+                }
+                else if ([rsvpStatus isEqualToString:@"attending"]) {
+                    [user setRsvpStatus:SFUserRSVPStatusAttending];
+                }
+                else if ([rsvpStatus isEqualToString:@"declined"]) {
+                    [user setRsvpStatus:SFUserRSVPStatusDeclined];
+                }
+                else if ([rsvpStatus isEqualToString:@"unsure"]) {
+                    [user setRsvpStatus:SFUserRSVPStatusMaybe];
+                }
+            }
+			
+			[users addObject:user];
+			[user release];
+		}
+		
+        NSString *nextPage = [self nextPageUrl:[result objectForKey:@"paging"]];
+		
+		if (successBlock) {
+            ((SFListObjectsBlock)successBlock)(users, nextPage);
+		}
+        [users release];
+        
+    } failure:failureBlock cancel:cancelBlock];
+    
+    return request;
 }
 
 #pragma mark - Private
@@ -515,11 +659,30 @@ static SFSocialFacebook *_instance;
     return nextPageUrl;
 }
 
+- (NSDate *)dateWithFacebookUnixTimestamp:(NSTimeInterval)unixTimestamp
+{
+    [_dateFormatter setTimeZone:_facebookTimeZone];
+    NSDate *sourceDate = [[NSDate alloc] initWithTimeIntervalSince1970:unixTimestamp];
+    NSString *dateString = [_dateFormatter stringFromDate:sourceDate];
+    
+    [_dateFormatter setTimeZone:_localTimeZone];
+    return [_dateFormatter dateFromString:dateString];
+}
+
+- (NSTimeInterval)facebookUnixTimestampFromDate:(NSDate *)date
+{
+    [_dateFormatter setTimeZone:_localTimeZone];
+    NSString *dateString = [_dateFormatter stringFromDate:date];
+    
+    [_dateFormatter setTimeZone:_facebookTimeZone];
+    return [[_dateFormatter dateFromString:dateString] timeIntervalSince1970];
+}
+
 - (SFFacebookRequest *)listProfileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     SFFacebookRequest *request = [self facebookRequestWithGraphPath:[graphPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] needsLogin:needsLogin success:^(id result) {
         SFSimplePost *post = nil;
-        NSMutableArray *posts = [NSMutableArray array];
+        NSMutableArray *posts = [[NSMutableArray alloc] init];
         
         for (id ob in [result objectForKey:@"data"]) {
             post = [[SFSimplePost alloc] init];
@@ -554,6 +717,8 @@ static SFSocialFacebook *_instance;
         if (successBlock) {
             ((SFListObjectsBlock)successBlock)(posts, nextPage);
         }
+        [post release];
+        
     } failure:failureBlock cancel:cancelBlock];
     
     return request;
@@ -688,70 +853,19 @@ static SFSocialFacebook *_instance;
 //    // release the connection, and the data object
 //    [self releaseRequestObjects];
 //}
-//
-//
-//- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error{
-////    if(_delegate && [_delegate respondsToSelector:@selector(socialFacebookDidFailReceivingConfiguration)]){
-////        [_delegate socialFacebookDidFailReceivingConfiguration];
-////    }
-//    
-//    [_connection release];
-//    [_receivedData release];
-//}
-//
-//#pragma mark -
-
-
-//- (void) listAreaFeedsWithPostsPerPage:(int)postsPerPage {
-//    [self listFeedsFromUser:facebookUserId PageSize:postsPerPage];
-//}
 
 
 - (void) handleLike: (NSString *) postId {
-	[_delegate retain];
-	if (![_facebook isSessionValid]) {
-		[postId retain];
-		if (pendingActionParams != nil) {
-			[pendingActionParams release];
-			pendingActionParams = nil;
-		}
-		pendingAction = @selector(handleLike:);
-		
-		pendingActionParams = [[NSMutableDictionary alloc] init];
-		[pendingActionParams setObject:postId forKey:@"postId"];
-		[postId release];
-		
-		[self login];
-	}
-	else {
 		[postId retain];
 		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@/likes?identifier=pagelike", postId] andParams:[NSMutableDictionary dictionaryWithObject:_appId forKey:@"app_id"] andHttpMethod:@"POST" andDelegate:self];
 		[postId release];
-	}	
 }
 
 
 - (void) handleUnlike: (NSString *) postId {
-	[_delegate retain];
-	if (![_facebook isSessionValid]) {
-		[postId retain];
-		if (pendingActionParams != nil) {
-			[pendingActionParams release];
-			pendingActionParams = nil;
-		}
-		pendingAction = @selector(handleUnlike:);
-		
-		pendingActionParams = [[NSMutableDictionary alloc] init];
-		[pendingActionParams setObject:postId forKey:@"postId"];
-		[postId release];
-		
-		[self login];
-	}
-	else {
 		[postId retain];
 		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@/likes?identifier=pageunlike", postId] andParams:[NSMutableDictionary dictionaryWithObject:_appId forKey:@"app_id"] andHttpMethod:@"DELETE" andDelegate:self];
 		[postId release];
-	}	
 }
 
 /*
@@ -784,258 +898,43 @@ static SFSocialFacebook *_instance;
  }
  */
 
-- (NSDate*) parseToDate:(NSString *) string
-{
-    NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-    NSString *format = ([string hasSuffix:@"Z"]) ? @"yyyy-MM-dd'T'HH:mm:ss'Z'" : @"yyyy-MM-dd'T'HH:mm:ssz";
-    [formatter setFormatterBehavior:NSDateFormatterBehavior10_4];
-	[formatter setDateFormat:format];
-    [formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"GMT"]];
-    return [formatter dateFromString:string];
-}
-
-
-- (void) fillUser: (SFUser *)user WithId: (NSString *)userId Target:(id)target AndSelector:(SEL)didFinish {
-	[user setTarget:target];
-	[user setFinishAction:didFinish];
-	[_facebook requestWithGraphPath:userId andParams:nil andDelegate:user];
-}
-
-- (void) fillUser: (SFUser *)user Target:(id)target AndSelector:(SEL)didFinish {
-    [self fillUser:user WithId:facebookUserId Target:target AndSelector:didFinish];
-}
-
-
 // This method is just to allow the user to "Attend" the main event from where all posts are being shown
 
-- (void) eventMarkAttending: (NSString *)eventId {
-	[_delegate retain];
-	if (![_facebook isSessionValid]) {
-		[eventId retain];
-		if (pendingActionParams != nil) {
-			[pendingActionParams release];
-			pendingActionParams = nil;
-		}
-		pendingAction = @selector(eventMarkAttending:);
-		
-		pendingActionParams = [[NSMutableDictionary alloc] init];
-		[pendingActionParams setObject:eventId forKey:@"eventId"];
-		[eventId release];
-		
-		[self login];
-	}
-	else {
-		[eventId retain];
-		NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
-		[pars setObject:_appId forKey:@"app_id"];
-		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@/attending", eventId] andParams:pars andHttpMethod:@"POST" andDelegate:self];
-		[eventId release];
-		[pars release];
-	}
-}
-
-- (void) inviteFriendsToEvent: (SFSimpleEventInvite *)invite {
-	[_delegate retain];
-	if (![_facebook isSessionValid]) {
-		[invite retain];
-		if (pendingActionParams != nil) {
-			[pendingActionParams release];
-			pendingActionParams = nil;
-		}
-		pendingAction = @selector(inviteFriendsToEvent:);
-		
-		pendingActionParams = [[NSMutableDictionary alloc] init];
-		[pendingActionParams setObject:invite forKey:@"invite"];
-		[invite release];
-		
-		[self login];
-	}
-	else {
-		[invite retain];
-		NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
-		
-		if ([invite	eventId] != nil) {
-			[pars setObject:[invite eventId] forKey:@"eid"];
-		}
-		if ([invite userIds] != nil) {
-			[pars setObject:[[invite userIds] componentsJoinedByString:@", "] forKey:@"uids"];
-		}
-		if ([invite message] != nil) {
-			[pars setObject:[invite message] forKey:@"personal_message"];
-		}
-		
-		[pars setObject:_appId forKey:@"app_id"];
-		
-		//NSLog(@"Invites: %@", pars);
-		
-		[_facebook requestWithMethodName:@"events.invite" andParams:pars andHttpMethod:@"POST" andDelegate:self];
-		[invite release];
-		[pars release];
-	}
-}
-
-- (void) getEvent: (NSString*) eventId {
-	[_delegate retain];
-	if (![_facebook isSessionValid]) {
-		
-		[eventId retain];
-		if (pendingActionParams != nil) {
-			[pendingActionParams release];
-			pendingActionParams = nil;
-		}
-		pendingAction = @selector(getEvent:);
-		
-		pendingActionParams = [[NSMutableDictionary alloc] init];
-		[pendingActionParams setObject:eventId forKey:@"eventId"];
-		[eventId release];
-		
-		[self login];
-	}
-	else {
-		
-		[eventId retain];
-		NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
-		
-		[pars setObject:_appId forKey:@"app_id"];
-		
-		
-		
-		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@?identifier=event", eventId] andParams:pars andHttpMethod:@"GET" andDelegate:self];
-		[eventId release];
-		[pars release];
-	}
-}
-
-- (void) getInvitedUsersForEvent: (NSString *) eventId PageSize: (int) pageSize {
-	[_delegate retain];
-	if (![_facebook isSessionValid]) {
-		[eventId retain];
-		if (pendingActionParams != nil) {
-			[pendingActionParams release];
-			pendingActionParams = nil;
-		}
-		pendingAction = @selector(getInvitedUsersForEvent:PageSize:);
-		
-		pendingActionParams = [[NSMutableDictionary alloc] init];
-		[pendingActionParams setObject:eventId forKey:@"eventId"];
-		[pendingActionParams setObject:[NSNumber numberWithInt:pageSize] forKey:@"pageSize"];
-		[eventId release];
-		
-		[self login];
-	}
-	else {
-		[eventId retain];
-		NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
-		
-		[pars setObject:_appId forKey:@"app_id"];
-		
-		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@/invited", eventId] andParams:pars andHttpMethod:@"GET" andDelegate:self];
-		[eventId release];
-		[pars release];
-	}
-}
-
-- (void) listNextPageInvited {
-	[_delegate retain];
-    if (nextPageInvited) {
-        [_facebook requestWithGraphPath:nextPageInvited andDelegate:self];
-    } else {
-        if ([_delegate respondsToSelector:@selector(socialFacebook:DidReceivedInvitedUsersList:)]) {
-			[_delegate socialFacebook:self DidReceivedInvitedUsersList:[NSArray array]];
-		}
-    }
-}
-
-- (void) getNumLikesFromPage: (NSString *)pageId {
-	NSLog(@"pageId: %@", pageId);
-	[_delegate retain];
-	
-	NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
-	
-	[pars setObject:_appId forKey:@"app_id"];
-	
-	[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@?identifier=likes", pageId] andParams:pars andHttpMethod:@"GET" andDelegate:self];
-	[pars release];
-	
-}
-
--(NSDate *) dateFromString:(NSString *)_date {
-	
-	NSDateFormatter *formatter = [[[NSDateFormatter alloc] init] autorelease];
-	NSString *format = @"yyyy-MM-dd'T'HH:mm:ss";
-	[formatter setFormatterBehavior:NSDateFormatterBehavior10_4];
-	[formatter setDateFormat:format];
-	[formatter setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"GMT"]];
-	return [formatter dateFromString:_date];
-	
-}
-
-/**
- * Called when a request returns and its response has been parsed into
- * an object.
- *
- * The resulting object may be a dictionary, an array, a string, or a number,
- * depending on thee format of the API response.
- */
-- (void)request:(FBRequest *)request didLoad:(id)result {
-	
-//	NSString *url = [request url];
-   
-//	else if([url rangeOfString:@"feed"].length > 0.0 && [[request httpMethod] isEqualToString:@"POST"]) {
+//- (void) eventMarkAttending: (NSString *)eventId {
+//		[eventId retain];
+//		NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
+//		[pars setObject:_appId forKey:@"app_id"];
+//		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@/attending", eventId] andParams:pars andHttpMethod:@"POST" andDelegate:self];
+//		[eventId release];
+//		[pars release];
+//}
+//
+//- (void) getEvent: (NSString*) eventId {
+//		[eventId retain];
+//		NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
 //		
-//		//NSLog(@"share: %@", result);
-//		if ([_delegate respondsToSelector:@selector(socialFacebook:DidSharePost:)]) {
-//			[_delegate socialFacebook:self DidSharePost:[result objectForKey:@"id"]];
-//		}
-//	}
-//	else if ([url rangeOfString:@"events.invite"].length > 0.0 && [[request httpMethod] isEqualToString:@"POST"]) {
+//		[pars setObject:_appId forKey:@"app_id"];
 //		
-//		if ([_delegate respondsToSelector:@selector(socialFacebookDidSendInvitationToEvent:)]) {
-//			[_delegate socialFacebookDidSendInvitationToEvent:self];
-//		}
-//	}
-//	else if ([url rangeOfString:@"events"].length > 0.0 && [[request httpMethod] isEqualToString:@"POST"]) {
-//		//NSLog(@"event: %@", result);
 //		
-//		if ([_delegate respondsToSelector:@selector(socialFacebook:DidCreateEventWithId:)]) {
-//			[_delegate socialFacebook:self DidCreateEventWithId:[result objectForKey:@"id"]];
-//		}
-//	}
-//	else if ([url rangeOfString:@"me?fields"].length > 0.0) {
-//		loggedUserId = [[result objectForKey:@"id"] retain];
-//		[self performPendingAction];
-//	}
-//	else if ([url rangeOfString:@"me/friends"].length > 0.0) {
-//		SFUser *us;
-//		NSMutableArray *listUsers = [[[NSMutableArray alloc] init] autorelease];
 //		
-//		for (id ob in [result objectForKey:@"data"]) {
-//			us = [[SFUser alloc] init];
-//			[us setName:[ob objectForKey:@"name"]];
-//			[us setUserId:[ob objectForKey:@"id"]];
-//			[us setImageUrl:[NSString stringWithFormat:@"http://graph.facebook.com/%@/picture", [us userId]]];
-//			
-//			[listUsers addObject:us];
-//			[us release];
-//		}
-//		
-//        [nextPageFriends release], nextPageFriends = nil;
-//        if ([result objectForKey:@"paging"] != nil) {
-//			nextPageFriends = (NSString *)[[result objectForKey:@"paging"] objectForKey:@"next"];
-//			int pos = [nextPageFriends rangeOfString:@".com/"].location + 5;
-//			nextPageFriends = [[nextPageFriends substringFromIndex:pos] retain];
-//		}
-//		
-//		if ([_delegate respondsToSelector:@selector(socialFacebook:ReceivedListOfFriends:)]) {
-//			[_delegate socialFacebook:self ReceivedListOfFriends:listUsers];
-//		}
-//	}
-//	else if ([url rangeOfString:@"/attending"].length > 0.0) {
-//		//NSLog(@"result: %@", result);
-//		if ([_delegate respondsToSelector:@selector(socialFacebookDidAttendingEvent:)]) {
-//			[_delegate socialFacebookDidAttendingEvent:self];
-//		}
-//	}
+//		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@?identifier=event", eventId] andParams:pars andHttpMethod:@"GET" andDelegate:self];
+//		[eventId release];
+//		[pars release];
+//}
+//
+//- (void) getNumLikesFromPage: (NSString *)pageId {
+//	NSLog(@"pageId: %@", pageId);
+//	
+//	NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
+//	
+//	[pars setObject:_appId forKey:@"app_id"];
+//	
+//	[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@?identifier=likes", pageId] andParams:pars andHttpMethod:@"GET" andDelegate:self];
+//	[pars release];
+//	
+//}
+
+
 //	else if ([url rangeOfString:@"identifier=event"].length > 0.0) {
 //		//NSLog(@"result: %@", result);
 //		
@@ -1066,48 +965,6 @@ static SFSocialFacebook *_instance;
 //			[_delegate socialFacebook:self DidReceiveEvent:ev];
 //		}
 //	}
-//	else if ([url rangeOfString:@"/invited"].length > 0.0) {
-//		SFUser *us;
-//		NSMutableArray *listUsers = [[[NSMutableArray alloc] init] autorelease];
-//		
-//		for (id ob in [result objectForKey:@"data"]) {
-//			us = [[SFUser alloc] init];
-//			[us setName:[ob objectForKey:@"name"]];
-//			[us setUserId:[ob objectForKey:@"id"]];
-//			[us setImageUrl:[NSString stringWithFormat:@"http://graph.facebook.com/%@/picture", [us userId]]];
-//            
-//            NSString *rsvpStatus = [ob objectForKey:@"rsvp_status"];
-//            
-//            if (rsvpStatus != nil) {
-//                if ([rsvpStatus isEqualToString:@"not_replied"]) {
-//                    [us setRsvpStatus:SFUserRSVPStatusNotReplied];
-//                }
-//                else if ([rsvpStatus isEqualToString:@"attending"]) {
-//                    [us setRsvpStatus:SFUserRSVPStatusAttending];
-//                }
-//                else if ([rsvpStatus isEqualToString:@"declined"]) {
-//                    [us setRsvpStatus:SFUserRSVPStatusDeclined];
-//                }
-//                else if ([rsvpStatus isEqualToString:@"unsure"]) {
-//                    [us setRsvpStatus:SFUserRSVPStatusMaybe];
-//                }
-//            }
-//			
-//			[listUsers addObject:us];
-//			[us release];
-//		}
-//		
-//        [nextPageInvited release], nextPageInvited = nil;
-//		if ([result objectForKey:@"paging"] != nil) {
-//			nextPageInvited = (NSString *)[[result objectForKey:@"paging"] objectForKey:@"next"];
-//			int pos = [nextPageInvited rangeOfString:@".com/"].location + 5;
-//			nextPageInvited = [[nextPageInvited substringFromIndex:pos] retain];
-//		}
-//		
-//		if ([_delegate respondsToSelector:@selector(socialFacebook:DidReceivedInvitedUsersList:)]) {
-//			[_delegate socialFacebook:self DidReceivedInvitedUsersList:listUsers];
-//		}
-//	}
 //	else if ([url rangeOfString:@"identifier=likes"].length > 0.0) {
 //		//NSLog(@"likes: %@", result);
 //		if ([_delegate respondsToSelector:@selector(socialFacebook:DidReceiveNumberOfLikes:)]) {
@@ -1120,10 +977,6 @@ static SFSocialFacebook *_instance;
 //			[_delegate socialFacebookDidLike:self];
 //		}
 //	}
-//    }
-//    [_fbRequests removeObject:request];
-//    [self releaseRequestObjects];
-}
 
 
 #pragma mark - FBSessionDelegate methods
@@ -1296,10 +1149,12 @@ static SFSocialFacebook *_instance;
     [_permissions release];
     [_appAccessToken release];
     
+    [_dateFormatter release];
+    [_facebookTimeZone release];
+    [_localTimeZone release];
+    
     [shingleServerPath release];
 	[pendingActionParams release];
-	[nextPageInvited release];
-	[nextPageFriends release];
 	[facebookUserId release];
 	[loggedUserId release];
     

@@ -1,9 +1,9 @@
 //
 //  SFFacebookRequest.m
-//  facebook-ios-sdk
+//  SFSocialFacebook
 //
 //  Created by Massaki on 11/10/11.
-//  Copyright (c) 2011 __MyCompanyName__. All rights reserved.
+//  Copyright (c) 2011 I.ndigo. All rights reserved.
 //
 
 #import "SFFacebookRequest.h"

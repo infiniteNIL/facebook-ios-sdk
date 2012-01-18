@@ -1,27 +1,24 @@
 //
 //  SFSimpleUser.h
-//  SFSocialFacebookExample
+//  SFSocialFacebook
 //
 //  Created by Massaki on 1/10/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+//  Copyright (c) 2012 I.ndigo. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
+#import "SFObject.h"
 
-typedef enum
-{
-    SFUserPictureTypeSquare,
-    SFUserPictureTypeSmall,
-    SFUserPictureTypeNormal,
-    SFUserPictureTypeLarge,
-} SFUserPictureType;
+typedef enum {
+    SFUserRSVPStatusUnknown,
+    SFUserRSVPStatusNotReplied,
+    SFUserRSVPStatusAttending,
+    SFUserRSVPStatusMaybe,
+    SFUserRSVPStatusDeclined,
+} SFUserRSVPStatus;
 
-@interface SFSimpleUser : NSObject
+@interface SFSimpleUser : SFObject
 
-@property(nonatomic, retain) NSString *userId;
-@property(nonatomic, retain) NSString *name;
-
-- (NSString *)pictureUrl;
-- (NSString *)pictureUrlWithType:(SFUserPictureType)type;
+@property(nonatomic) SFUserRSVPStatus rsvpStatus;
 
 @end

@@ -1,9 +1,9 @@
 //
 //  SFUtil.h
-//  Hackbook
+//  SFSocialFacebook
 //
 //  Created by Massaki on 1/6/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+//  Copyright (c) 2012 I.ndigo. All rights reserved.
 //
 
 #ifdef DEBUG

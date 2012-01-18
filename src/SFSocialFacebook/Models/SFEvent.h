@@ -1,23 +1,19 @@
 //
 //  SFSimpleEvent.h
-//  NBC
+//  SFSocialFacebook
 //
-//  Created by Bruno Toshio Sugano on 3/3/11.
-//  Copyright 2011 __MyCompanyName__. All rights reserved.
+//  Created by Massaki on 1/16/12.
+//  Copyright (c) 2011 I.ndigo. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-#import <QuartzCore/QuartzCore.h>
+#import "SFObject.h"
 
 @class SFSimpleUser;
 
-@interface SFEvent : NSObject {
-    CALayer *a;
-}
+@interface SFEvent : SFObject
 
-@property(nonatomic, retain) NSString *eventId;
 @property(nonatomic, retain) SFSimpleUser *owner;
-@property(nonatomic, retain) NSString *name;	
 @property(nonatomic, retain) NSString *eventDescription;
 @property(nonatomic, retain) NSDate *startTime;
 @property(nonatomic, retain) NSDate *endTime;

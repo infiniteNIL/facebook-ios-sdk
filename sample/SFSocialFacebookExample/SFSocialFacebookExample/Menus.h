@@ -3,7 +3,7 @@
 //  SFSocialFacebookExample
 //
 //  Created by Massaki on 1/5/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+//  Copyright (c) 2012 I.ndigo. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
@@ -16,5 +16,6 @@
 - (NSArray *)login;
 - (NSArray *)newsFeed;
 - (NSArray *)events;
+- (NSArray *)event;
 
 @end

@@ -3,12 +3,13 @@
 //  SFSocialFacebookExample
 //
 //  Created by Massaki on 1/5/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
+//  Copyright (c) 2012 I.ndigo. All rights reserved.
 //
 
 #import "APICallViewController.h"
 #import "Menus.h"
 #import "SFSocialFacebook.h"
+#import "ObjectPickerController.h"
 
 @interface APICallViewController (Private)
 
@@ -19,7 +20,9 @@
 - (void)publish;
 - (void)publishToFriend;
 - (void)createEvent;
+- (void)listEvents;
 - (void)inviteFriends;
+- (void)listInvitedUsers:(NSNumber *)rsvpStatus;
 
 @end
 
@@ -35,9 +38,19 @@
     return self;
 }
 
+- (id)initWithEventId:(NSString *)eventId
+{
+    self = [self initWithMenu:@"event"];
+    if (self) {
+        _eventId = [eventId copy];
+    }
+    return self;
+}
+
 - (void)dealloc {
     [_tableView release];
     [_menuOptions release];
+    [_eventId release];
     
     [super dealloc];
 }
@@ -83,7 +96,7 @@
     NSDictionary *option = [_menuOptions objectAtIndex:[indexPath row]];
     NSString *action = [option objectForKey:@"method"];
     if (action) {
-        [self performSelector:NSSelectorFromString(action)];
+        [self performSelector:NSSelectorFromString(action) withObject:[option objectForKey:@"arg"]];
     }
     else if ((action = [option objectForKey:@"controller"])) {
         Class ctlrClass = NSClassFromString(action);
@@ -189,7 +202,7 @@
                         
             int randomNumber = arc4random() % [friends count];
             SFSimpleUser *usertTo = [[SFSimpleUser alloc] init];
-            usertTo.userId = [[friends objectAtIndex:randomNumber] userId];
+            usertTo.objectId = [[friends objectAtIndex:randomNumber] userId];
             
             SFSimplePost *post = [[SFSimplePost alloc] init];
             post.to = [NSArray arrayWithObject:usertTo];
@@ -246,9 +259,81 @@
     [event release];
 }
 
+- (void)listEvents
+{
+    [[SFSocialFacebook sharedInstance] listEventsWithPageSize:0 success:^(NSArray *objects, NSString *nextPageUrl) {
+        
+        __block UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:objects type:ObjectTypeEvent pickerType:ObjectPickerTypeOne completion:^(NSArray *selectedIds) {
+            
+            UIViewController *eventCtrl = [[APICallViewController alloc] initWithEventId:[selectedIds objectAtIndex:0]];
+            [ctrl.navigationController pushViewController:eventCtrl animated:YES];
+            [eventCtrl release];
+            
+        }];
+        
+        [self.navigationController pushViewController:ctrl animated:YES];
+        [ctrl release];
+        
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]]; 
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"List events request cancelled"];
+    }];
+}
+
 - (void)inviteFriends
 {
+    __block SFSocialFacebook *socialFacebook = [SFSocialFacebook sharedInstance];
     
+    [socialFacebook listFriendsWithPageSize:0 success:^(NSArray *friends, NSString *nextPageUrl) {
+        
+        UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:friends type:ObjectTypeUser pickerType:ObjectPickerTypeMany completion:^(NSArray *selectedIds) {
+            [socialFacebook inviteUsers:selectedIds toEvent:_eventId success:^{
+                [self showAlertViewWithTitle:@"Success" message:@"Users invited successfully"];
+            } failure:^(NSError *error) {
+                [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+            } cancel:^{
+                [self showAlertViewWithTitle:nil message:@"Invite users request cancelled"];
+            }];
+            
+            if ([self respondsToSelector:@selector(dismissViewControllerAnimated:completion:)]) {
+                [self dismissViewControllerAnimated:YES completion:NULL];
+            } else {
+                [self dismissModalViewControllerAnimated:YES];
+            }
+            
+        }];
+        
+        UINavigationController *navCtrl = [[UINavigationController alloc] initWithRootViewController:ctrl];
+        [ctrl release];
+        
+        if ([self respondsToSelector:@selector(presentViewController:animated:completion:)]) {
+            [self presentViewController:navCtrl animated:YES completion:NULL];
+        } else {
+            [self presentModalViewController:navCtrl animated:YES];
+        }
+        [navCtrl release];
+        
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"List friends request cancelled"];
+    }];
+}
+
+- (void)listInvitedUsers:(NSNumber *)rsvpStatus
+{
+    [[SFSocialFacebook sharedInstance] invitedUsersForEvent:_eventId rsvpStatus:[rsvpStatus intValue] pageSize:0 success:^(NSArray *objects, NSString *nextPageUrl) {
+        
+        UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:objects type:ObjectTypeUser pickerType:ObjectPickerTypeNone completion:NULL];
+        [self.navigationController pushViewController:ctrl animated:YES];
+        [ctrl release];
+        
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"List invited users request cancelled"];
+    }];
 }
 
 @end

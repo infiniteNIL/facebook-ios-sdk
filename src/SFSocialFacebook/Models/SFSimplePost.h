@@ -1,9 +1,9 @@
 //
 //  SFSimplePost.h
-//  POCShareComponent
+//  SFSocialFacebook
 //
-//  Created by Bruno Toshio Sugano on 2/17/11.
-//  Copyright 2011 I.ndigo. All rights reserved.
+//  Created by Massaki on 1/10/12.
+//  Copyright (c) 2011 I.ndigo. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
