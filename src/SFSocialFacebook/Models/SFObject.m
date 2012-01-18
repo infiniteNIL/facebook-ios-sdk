@@ -42,4 +42,14 @@
     return [NSString stringWithFormat:@"http://graph.facebook.com/%@/picture?type=%@", [self objectId], pictureType];
 }
 
+- (NSDictionary *)dictionary
+{
+    return [self dictionaryWithValuesForKeys:[NSArray arrayWithObjects:@"objectId", @"name", nil]];
+}
+
+- (NSString *)description
+{
+    return [[self dictionary] description];
+}
+
 @end

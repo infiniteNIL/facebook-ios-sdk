@@ -127,7 +127,7 @@ static Menus *_instance;
                                  nil];
     
     NSDictionary *menuOption1 = [[NSDictionary alloc] initWithObjectsAndKeys:
-                                 @"Event list", @"title", 
+                                 @"My events", @"title", 
                                  @"listEvents", @"method",
                                  nil];
     
@@ -145,35 +145,40 @@ static Menus *_instance;
 - (NSArray *)event
 {
     NSDictionary *menuOption0 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Event details", @"title", 
+                                 @"eventDetails", @"method",
+                                 nil];
+    
+    NSDictionary *menuOption1 = [[NSDictionary alloc] initWithObjectsAndKeys:
                                  @"Invite friends", @"title", 
                                  @"inviteFriends", @"method",
                                  nil];
     
-    NSDictionary *menuOption1 = [[NSDictionary alloc] initWithObjectsAndKeys:
+    NSDictionary *menuOption2 = [[NSDictionary alloc] initWithObjectsAndKeys:
                                  @"Invitee list", @"title", 
                                  @"listInvitedUsers:", @"method",
                                  [NSNumber numberWithInt:SFUserRSVPStatusUnknown], @"arg", 
                                  nil];
     
-    NSDictionary *menuOption2 = [[NSDictionary alloc] initWithObjectsAndKeys:
+    NSDictionary *menuOption3 = [[NSDictionary alloc] initWithObjectsAndKeys:
                                  @"Attending list", @"title", 
                                  @"listInvitedUsers:", @"method",
                                  [NSNumber numberWithInt:SFUserRSVPStatusAttending], @"arg", 
                                  nil];
     
-    NSDictionary *menuOption3 = [[NSDictionary alloc] initWithObjectsAndKeys:
+    NSDictionary *menuOption4 = [[NSDictionary alloc] initWithObjectsAndKeys:
                                  @"Maybe list", @"title", 
                                  @"listInvitedUsers:", @"method",
                                  [NSNumber numberWithInt:SFUserRSVPStatusMaybe], @"arg", 
                                  nil];
     
-    NSDictionary *menuOption4 = [[NSDictionary alloc] initWithObjectsAndKeys:
+    NSDictionary *menuOption5 = [[NSDictionary alloc] initWithObjectsAndKeys:
                                  @"Declined list", @"title", 
                                  @"listInvitedUsers:", @"method",
                                  [NSNumber numberWithInt:SFUserRSVPStatusDeclined], @"arg", 
                                  nil];
     
-    NSDictionary *menuOption5 = [[NSDictionary alloc] initWithObjectsAndKeys:
+    NSDictionary *menuOption6 = [[NSDictionary alloc] initWithObjectsAndKeys:
                                  @"Not replied list", @"title", 
                                  @"listInvitedUsers:", @"method",
                                  [NSNumber numberWithInt:SFUserRSVPStatusNotReplied], @"arg", 
@@ -186,6 +191,7 @@ static Menus *_instance;
                      menuOption3, 
                      menuOption4, 
                      menuOption5, 
+                     menuOption6, 
                      nil];
     
     [menuOption0 release];
@@ -194,6 +200,7 @@ static Menus *_instance;
     [menuOption3 release];
     [menuOption4 release];
     [menuOption5 release];
+    [menuOption6 release];
     
     return menu;
 }

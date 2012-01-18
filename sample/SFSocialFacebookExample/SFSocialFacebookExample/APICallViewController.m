@@ -21,6 +21,7 @@
 - (void)publishToFriend;
 - (void)createEvent;
 - (void)listEvents;
+- (void)eventDetails;
 - (void)inviteFriends;
 - (void)listInvitedUsers:(NSNumber *)rsvpStatus;
 
@@ -196,7 +197,7 @@
 
 - (void)publishToFriend
 {
-    [[SFSocialFacebook sharedInstance] listFriendsWithPageSize:30 success:^(NSArray *friends, NSString *nextPageUrl) {
+    [[SFSocialFacebook sharedInstance] friendsWithPageSize:30 success:^(NSArray *friends, NSString *nextPageUrl) {
         
         if ([friends count] > 0) {
                         
@@ -261,7 +262,7 @@
 
 - (void)listEvents
 {
-    [[SFSocialFacebook sharedInstance] listEventsWithPageSize:0 success:^(NSArray *objects, NSString *nextPageUrl) {
+    [[SFSocialFacebook sharedInstance] eventsWithPageSize:0 success:^(NSArray *objects, NSString *nextPageUrl) {
         
         __block UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:objects type:ObjectTypeEvent pickerType:ObjectPickerTypeOne completion:^(NSArray *selectedIds) {
             
@@ -281,11 +282,22 @@
     }];
 }
 
+- (void)eventDetails
+{
+    [[SFSocialFacebook sharedInstance] eventWithId:_eventId needsLogin:YES success:^(SFEvent *event) {
+        [self showAlertViewWithTitle:@"Event" message:[event description]];
+    } failureBlock:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"Event details request cancelled"];
+    }];
+}
+
 - (void)inviteFriends
 {
     __block SFSocialFacebook *socialFacebook = [SFSocialFacebook sharedInstance];
     
-    [socialFacebook listFriendsWithPageSize:0 success:^(NSArray *friends, NSString *nextPageUrl) {
+    [socialFacebook friendsWithPageSize:0 success:^(NSArray *friends, NSString *nextPageUrl) {
         
         UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:friends type:ObjectTypeUser pickerType:ObjectPickerTypeMany completion:^(NSArray *selectedIds) {
             [socialFacebook inviteUsers:selectedIds toEvent:_eventId success:^{

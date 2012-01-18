@@ -27,4 +27,12 @@ NSString *const kSFEventPrivacySecret = @"SECRET";
 	[super dealloc];
 }
 
+- (NSDictionary *)dictionary
+{
+    NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithDictionary:[super dictionary]];
+    [dic addEntriesFromDictionary:[self dictionaryWithValuesForKeys:[NSArray arrayWithObjects:@"owner", @"eventDescription", @"startTime", @"endTime", @"location", @"privacy", nil]]];
+    
+    return dic;
+}
+
 @end

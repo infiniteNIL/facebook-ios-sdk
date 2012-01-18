@@ -368,12 +368,12 @@ static SFSocialFacebook *_instance;
     }
 }
 
-- (SFFacebookRequest *)listFriendsWithPageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)friendsWithPageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
-    return [self listFriendsNextPage:[NSString stringWithFormat:@"me/friends?limit=%d", pageSize] success:successBlock failure:failureBlock cancel:cancelBlock];
+    return [self friendsNextPage:[NSString stringWithFormat:@"me/friends?limit=%d", pageSize] success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
-- (SFFacebookRequest *)listFriendsNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)friendsNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     SFFacebookRequest *request = [self facebookRequestWithGraphPath:[nextPageUrl stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] needsLogin:YES success:^(id result) {
         
@@ -401,12 +401,51 @@ static SFSocialFacebook *_instance;
     return request;
 }
 
-- (SFFacebookRequest *)listEventsWithPageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)eventWithId:(NSString *)eventId needsLogin:(BOOL)needsLogin success:(void (^)(SFEvent *))successBlock failureBlock:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
-    return [self listEventsNextPage:[NSString stringWithFormat:@"me/events?fields=id,name,start_time,end_time,location&date_format=U&limit=%d", pageSize] success:successBlock failure:failureBlock cancel:cancelBlock];
+    SFFacebookRequest *request = [self facebookRequestWithGraphPath:[NSString stringWithFormat:@"%@?date_format=U", eventId] needsLogin:needsLogin success:^(id result) {
+        
+        if (successBlock) {
+            
+            SFEvent *event = nil;
+            NSString *eventId = [result objectForKey:@"id"];
+            
+            if (eventId) {
+                event = [[SFEvent alloc] init];
+                
+                event.objectId = eventId;
+                event.name = [result objectForKey:@"name"];
+                event.eventDescription = [result objectForKey:@"description"];
+                event.startTime = [self dateWithFacebookUnixTimestamp:[[result objectForKey:@"start_time"] doubleValue]];
+                event.endTime = [self dateWithFacebookUnixTimestamp:[[result objectForKey:@"end_time"] doubleValue]];
+                event.location = [result objectForKey:@"location"];
+                event.privacy = [result objectForKey:@"privacy"];
+                
+                NSDictionary *ownerDic = [result objectForKey:@"owner"];
+                if (ownerDic) {
+                    SFSimpleUser *owner = [[SFSimpleUser alloc] init];
+                    owner.objectId = [ownerDic objectForKey:@"id"];
+                    owner.name = [ownerDic objectForKey:@"name"];
+                    event.owner = owner;
+                    [owner release];
+                }
+            }
+            
+            ((void (^)(SFEvent *event))successBlock)(event);
+            [event release];
+        }
+        
+    } failure:failureBlock cancel:cancelBlock];
+    
+    return request;
 }
 
-- (SFFacebookRequest *)listEventsNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)eventsWithPageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    return [self eventsNextPage:[NSString stringWithFormat:@"me/events?fields=id,name,start_time,end_time,location&date_format=U&limit=%d", pageSize] success:successBlock failure:failureBlock cancel:cancelBlock];
+}
+
+- (SFFacebookRequest *)eventsNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     SFFacebookRequest *request = [self facebookRequestWithGraphPath:nextPageUrl needsLogin:YES success:^(id result) {
         

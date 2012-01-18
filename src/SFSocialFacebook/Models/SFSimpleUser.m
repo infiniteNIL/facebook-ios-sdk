@@ -12,4 +12,12 @@
 
 @synthesize rsvpStatus;
 
+- (NSDictionary *)dictionary
+{
+    NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithDictionary:[super dictionary]];
+    [dic addEntriesFromDictionary:[self dictionaryWithValuesForKeys:[NSArray arrayWithObjects:@"rsvpStatus", nil]]];
+    
+    return dic;
+}
+
 @end

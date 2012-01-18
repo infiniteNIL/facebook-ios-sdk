@@ -21,6 +21,8 @@ typedef enum {
 @property (nonatomic, retain) NSString *objectId;
 @property (nonatomic, retain) NSString *name;
 
+- (NSDictionary *)dictionary;
+
 - (NSString *)pictureUrl;
 - (NSString *)pictureUrlWithType:(SFObjectPictureType)type;
 
