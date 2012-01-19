@@ -44,9 +44,10 @@
 - (void)dealloc
 {
     [_completionBlock release];
+    [_tableView release];
+    [_objects release];
     [_selectedObjects release];
     [_dateFormatter release];
-    [_tableView release];
     
     [super dealloc];
 }
@@ -160,7 +161,7 @@
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
     
     if (cell == nil) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellId];
+        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellId] autorelease];
     }
     
     SFObject *object = [_objects objectAtIndex:indexPath.row];

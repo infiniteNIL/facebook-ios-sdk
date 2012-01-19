@@ -473,7 +473,7 @@ static SFSocialFacebook *_instance;
 - (SFFacebookRequest *)createEvent:(SFEvent *)event success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     if (event) {
-        NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
+        NSMutableDictionary *params = [NSMutableDictionary dictionary];
         
         NSString *value = [event name];
         if (value) {
@@ -521,7 +521,6 @@ static SFSocialFacebook *_instance;
             }
             
         } failure:failureBlock cancel:cancelBlock];
-        [params release];
         
         return request;
         
@@ -709,6 +708,7 @@ static SFSocialFacebook *_instance;
     [_dateFormatter setTimeZone:_facebookTimeZone];
     NSDate *sourceDate = [[NSDate alloc] initWithTimeIntervalSince1970:unixTimestamp];
     NSString *dateString = [_dateFormatter stringFromDate:sourceDate];
+    [sourceDate release];
     
     [_dateFormatter setTimeZone:_localTimeZone];
     return [_dateFormatter dateFromString:dateString];
@@ -771,7 +771,7 @@ static SFSocialFacebook *_instance;
         if (successBlock) {
             successBlock(posts, nextPage);
         }
-        [post release];
+        [posts release];
         
     } failure:failureBlock cancel:cancelBlock];
     
