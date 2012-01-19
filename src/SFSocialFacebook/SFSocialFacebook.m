@@ -741,6 +741,7 @@ static SFSocialFacebook *_instance;
                 from.name = [fromJson objectForKey:@"name"];
                 
                 post.from = from;
+                [from release];
             }
             
             [post setMessage:(NSString *)[ob objectForKey:@"message"]];
