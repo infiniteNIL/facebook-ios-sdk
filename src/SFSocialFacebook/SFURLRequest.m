@@ -17,12 +17,12 @@
 
 @implementation SFURLRequest
 
-+ (id)requestWithURL:(NSString *)url success:(void (^)(NSData *))successBlock failure:(void (^)(NSError *))failureBlock
++ (id)requestWithURL:(NSString *)url success:(void (^)(NSData *))successBlock failure:(void (^)(NSError *))failureBlock cancel:(void (^)())cancelBlock
 {
-    return [[[self alloc] initWithURL:url success:successBlock failure:failureBlock] autorelease];
+    return [[[self alloc] initWithURL:url success:successBlock failure:failureBlock cancel:cancelBlock] autorelease];
 }
 
-- (id)initWithURL:(NSString *)url success:(void (^)(NSData *))successBlock failure:(void (^)(NSError *))failureBlock
+- (id)initWithURL:(NSString *)url success:(void (^)(NSData *))successBlock failure:(void (^)(NSError *))failureBlock cancel:(void (^)())cancelBlock
 {
     self = [self init];
     if (self) {
@@ -39,15 +39,13 @@
             
             _successBlock = [successBlock copy];
             _failureBlock = [failureBlock copy];
+            _cancelBlock = [cancelBlock copy];
+            
+            [self retain];
         } else {
             
             // Connection failed.
-            NSMutableDictionary *errorDetail = [NSMutableDictionary dictionary];
-            [errorDetail setValue:@"Could not create connection" forKey:NSLocalizedDescriptionKey];
-            NSError *error = [[NSError alloc] initWithDomain:NSStringFromClass([self class]) code:0 userInfo:errorDetail];
-            
-            failureBlock(error);
-            [error release];
+            failureBlock(SFError(@"Could not create connection"));
         }
     }
     return self;
@@ -56,8 +54,15 @@
 
 - (void)cancel
 {
-    [_connection cancel];
-    [self releaseObjects];
+    if (_connection) {
+        [_connection cancel];
+        
+        if (_cancelBlock) {
+            _cancelBlock();
+        }
+        
+        [self releaseObjects];
+    }
 }
 
 #pragma mark - Dealloc
@@ -68,18 +73,26 @@
     [_receivedData release];
     [_successBlock release];
     [_failureBlock release];
+    [_cancelBlock release];
     
     [super dealloc];
 }
 
 #pragma mark - Private
 
+/**
+ * Release retained objects
+ * SHOULD CALL NOTHING AFTER THIS METHOD
+ */
 - (void)releaseObjects
 {
     [_connection release], _connection = nil;
     [_receivedData release], _receivedData = nil;
     [_successBlock release], _successBlock = nil;
     [_failureBlock release], _failureBlock = nil;
+    [_cancelBlock release], _cancelBlock = nil;
+    
+    [self release];
 }
 
 #pragma mark - NSURLConnectionDataDelegate
@@ -105,7 +118,9 @@
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection
 {
-    _successBlock(_receivedData);
+    if (_successBlock) {
+        _successBlock(_receivedData);
+    }
     
     [self releaseObjects];
 }
@@ -113,13 +128,15 @@
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error
 {
     // Connection failed
-    _failureBlock(error);
-    
-    [self releaseObjects];
+    if (_failureBlock) {
+        _failureBlock(error);
+    }
     
     SFDLog(@"Connection failed! Error - %@ %@",
           [error localizedDescription],
           [[error userInfo] objectForKey:NSURLErrorFailingURLStringErrorKey]);
+    
+    [self releaseObjects];
 }
 
 @end

@@ -10,6 +10,8 @@
 #import "Menus.h"
 #import "SFSocialFacebook.h"
 #import "ObjectPickerController.h"
+#import "SFURLRequest.h"
+
 
 @interface APICallViewController (Private)
 
@@ -22,8 +24,10 @@
 - (void)createEvent;
 - (void)listEvents;
 - (void)eventDetails;
+- (void)attendEvent;
 - (void)inviteFriends;
 - (void)listInvitedUsers:(NSNumber *)rsvpStatus;
+- (void)shingleConfiguration;
 
 @end
 
@@ -49,9 +53,15 @@
 }
 
 - (void)dealloc {
+    [_urlRequest cancel];
+    [_facebookRequest cancel];
+    
     [_tableView release];
     [_menuOptions release];
     [_eventId release];
+    
+    [_urlRequest release];
+    [_facebookRequest release];
     
     [super dealloc];
 }
@@ -76,6 +86,21 @@
     [super viewWillAppear:animated];
     
     [_tableView deselectRowAtIndexPath:[_tableView indexPathForSelectedRow] animated:YES];
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    if (_urlRequest) {
+        [_urlRequest cancel];
+        [_urlRequest release], _urlRequest = nil;
+    }
+    
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release], _facebookRequest = nil;
+    }
+    
+    [super viewWillDisappear:animated];
 }
 
 - (void)viewDidUnload
@@ -152,7 +177,7 @@
     [[SFSocialFacebook sharedInstance] loginWithSuccess:^{
         [self showAlertViewWithTitle:@"Login" message:@"Success"];
     } failure:^(BOOL cancelled) {
-        [self showAlertViewWithTitle:@"Login Failed" message:(cancelled)? @"Login cancelled" : nil];
+        [self showAlertViewWithTitle:@"Login Failed" message:(cancelled)? @"Login was cancelled" : nil];
     }];
 }
 
@@ -165,12 +190,17 @@
 
 - (void)uninstallApp
 {
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
     [[SFSocialFacebook sharedInstance] uninstallApp:^{
         [self showAlertViewWithTitle:@"Uninstall App" message:@"Success"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } failure:^(NSError *error) {
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } cancel:^{
         [self showAlertViewWithTitle:@"Uninstall App" message:@"Canceled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     }];
 }
 
@@ -232,7 +262,7 @@
     } failure:^(NSError *error) {
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
     } cancel:^{
-        [self showAlertViewWithTitle:nil message:@"Request cancelled"];
+        [self showAlertViewWithTitle:nil message:@"List friends request was cancelled"];
     }];
 }
 
@@ -249,20 +279,37 @@
     
     [startTime release];
     
-    [[SFSocialFacebook sharedInstance] createEvent:event success:^(NSString *objectId) {
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] createEvent:event success:^(NSString *objectId) {
         [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Event id: %@", objectId]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } failure:^(NSError *error) {
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } cancel:^{
-        [self showAlertViewWithTitle:nil message:@"Create event request cancelled"];
-    }];
+        [self showAlertViewWithTitle:nil message:@"Create event request was cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
     
     [event release];
 }
 
 - (void)listEvents
 {
-    [[SFSocialFacebook sharedInstance] eventsWithPageSize:0 success:^(NSArray *objects, NSString *nextPageUrl) {
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] eventsWithPageSize:0 success:^(NSArray *objects, NSString *nextPageUrl) {
         
         __block UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:objects type:ObjectTypeEvent pickerType:ObjectPickerTypeOne completion:^(NSArray *selectedIds) {
             
@@ -275,38 +322,88 @@
         [self.navigationController pushViewController:ctrl animated:YES];
         [ctrl release];
         
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+        
     } failure:^(NSError *error) {
-        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]]; 
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } cancel:^{
-        [self showAlertViewWithTitle:nil message:@"List events request cancelled"];
-    }];
+        [self showAlertViewWithTitle:nil message:@"List events request was cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
 }
 
 - (void)eventDetails
 {
-    [[SFSocialFacebook sharedInstance] eventWithId:_eventId needsLogin:YES success:^(SFEvent *event) {
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] eventWithId:_eventId needsLogin:YES success:^(SFEvent *event) {
         [self showAlertViewWithTitle:@"Event" message:[event description]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } failureBlock:^(NSError *error) {
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } cancel:^{
-        [self showAlertViewWithTitle:nil message:@"Event details request cancelled"];
-    }];
+        [self showAlertViewWithTitle:nil message:@"Event details request was cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
+}
+
+- (void)attendEvent
+{
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] attendEvent:_eventId success:^{
+        [self showAlertViewWithTitle:@"Attend event" message:@"Success"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"Attend event request was cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
 }
 
 - (void)inviteFriends
 {
     __block SFSocialFacebook *socialFacebook = [SFSocialFacebook sharedInstance];
     
-    [socialFacebook friendsWithPageSize:0 success:^(NSArray *friends, NSString *nextPageUrl) {
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _facebookRequest = [[socialFacebook friendsWithPageSize:0 success:^(NSArray *friends, NSString *nextPageUrl) {
         
         UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:friends type:ObjectTypeUser pickerType:ObjectPickerTypeMany completion:^(NSArray *selectedIds) {
-            [socialFacebook inviteUsers:selectedIds toEvent:_eventId success:^{
-                [self showAlertViewWithTitle:@"Success" message:@"Users invited successfully"];
-            } failure:^(NSError *error) {
-                [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
-            } cancel:^{
-                [self showAlertViewWithTitle:nil message:@"Invite users request cancelled"];
-            }];
+            
+            if ([selectedIds count] > 0) {
+            
+                _facebookRequest = [[socialFacebook inviteUsers:selectedIds toEvent:_eventId success:^{
+                    [self showAlertViewWithTitle:@"Success" message:@"Users invited successfully"];
+                } failure:^(NSError *error) {
+                    [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+                } cancel:^{
+                    [self showAlertViewWithTitle:nil message:@"Invite users request was cancelled"];
+                }] retain];
+                
+            } else {
+                [self showAlertViewWithTitle:nil message:@"No users was selected"];
+            }
+            
             
             if ([self respondsToSelector:@selector(dismissViewControllerAnimated:completion:)]) {
                 [self dismissViewControllerAnimated:YES completion:NULL];
@@ -326,26 +423,62 @@
         }
         [navCtrl release];
         
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+        
     } failure:^(NSError *error) {
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } cancel:^{
-        [self showAlertViewWithTitle:nil message:@"List friends request cancelled"];
-    }];
+        [self showAlertViewWithTitle:nil message:@"List friends request was cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
 }
 
 - (void)listInvitedUsers:(NSNumber *)rsvpStatus
 {
-    [[SFSocialFacebook sharedInstance] invitedUsersForEvent:_eventId rsvpStatus:[rsvpStatus intValue] pageSize:0 success:^(NSArray *objects, NSString *nextPageUrl) {
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] invitedUsersForEvent:_eventId rsvpStatus:[rsvpStatus intValue] pageSize:0 success:^(NSArray *objects, NSString *nextPageUrl) {
         
         UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:objects type:ObjectTypeUser pickerType:ObjectPickerTypeNone completion:NULL];
         [self.navigationController pushViewController:ctrl animated:YES];
         [ctrl release];
         
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+        
     } failure:^(NSError *error) {
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } cancel:^{
-        [self showAlertViewWithTitle:nil message:@"List invited users request cancelled"];
-    }];
+        [self showAlertViewWithTitle:nil message:@"List invited users request was cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
+}
+
+- (void)shingleConfiguration
+{
+    if (_urlRequest) {
+        [_urlRequest cancel];
+        [_urlRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _urlRequest = [[[SFSocialFacebook sharedInstance] shingleConfigurationWithUrl:@"http://icardinal-develop.heroku.com/" andArea:110 success:^(NSString *profile, BOOL needsLogin) {
+        [self showAlertViewWithTitle:@"Shingle Configuration" message:[NSString stringWithFormat:@"profileId: %@\nneedsLogin: %@", profile, (needsLogin? @"YES" : @"NO")]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"Shingle configuration request was cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
 }
 
 @end

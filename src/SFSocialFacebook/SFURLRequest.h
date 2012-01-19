@@ -16,11 +16,12 @@
     // Blocks
     void (^_successBlock)(NSData *);
     void (^_failureBlock)(NSError *);
+    void (^_cancelBlock)();
 }
 
-+ (id)requestWithURL:(NSString *)url success:(void (^)(NSData *receivedData))successBlock failure:(void (^)(NSError *error))failureBlock;;
++ (id)requestWithURL:(NSString *)url success:(void (^)(NSData *receivedData))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
 
-- (id)initWithURL:(NSString *)url success:(void (^)(NSData *receivedData))successBlock failure:(void (^)(NSError *error))failureBlock;
+- (id)initWithURL:(NSString *)url success:(void (^)(NSData *receivedData))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
 
 - (void)cancel;
 

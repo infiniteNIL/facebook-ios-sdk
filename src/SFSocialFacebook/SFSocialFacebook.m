@@ -11,9 +11,6 @@
 #import "SBJSON.h"
 #import "SFURLRequest.h"
 
-#define GET_FACEBOOK_WITH_AREA @"facebook/getFacebook?area_id="
-
-
 /*
  
  The last thing that needs to be accomplished to enable SSO support is a change to the .plist 
@@ -46,10 +43,6 @@
 
 
 @implementation SFSocialFacebook
-
-@synthesize facebookUserId;
-@synthesize loggedUserId;
-
 
 #pragma mark - Singleton implementation
 
@@ -253,7 +246,7 @@ static SFSocialFacebook *_instance;
                                  }
                              }
                          } 
-                         failure:failureBlock];
+                         failure:failureBlock cancel:NULL];
 }
 
 - (void)loginWithSuccess:(SFBasicBlock)successBlock failure:(SFDidNotLoginBlock)failureBlock
@@ -283,7 +276,7 @@ static SFSocialFacebook *_instance;
         request = [self facebookRequestWithGraphPath:@"me/permissions" params:params httpMethod:@"DELETE" needsLogin:YES success:^(id result) {
             [self logoutWithSuccess:nil];
             if (successBlock) {
-                ((SFBasicBlock)successBlock)();
+                successBlock();
             }
         } failure:failureBlock cancel:cancelBlock];
         
@@ -392,7 +385,7 @@ static SFSocialFacebook *_instance;
         NSString *nextPage = [self nextPageUrl:[result objectForKey:@"paging"]];
         
         if (successBlock) {
-            ((SFListObjectsBlock)successBlock)(friends, nextPage);
+            successBlock(friends, nextPage);
         }
         [friends release];
         
@@ -431,7 +424,7 @@ static SFSocialFacebook *_instance;
                 }
             }
             
-            ((void (^)(SFEvent *event))successBlock)(event);
+            successBlock(event);
             [event release];
         }
         
@@ -467,7 +460,7 @@ static SFSocialFacebook *_instance;
         NSString *nextPage = [self nextPageUrl:[result objectForKey:@"paging"]];
         
         if (successBlock) {
-            ((SFListObjectsBlock)successBlock)(events, nextPage);
+            successBlock(events, nextPage);
         }
         [events release];
 
@@ -524,7 +517,7 @@ static SFSocialFacebook *_instance;
         SFFacebookRequest *request = [self facebookRequestWithGraphPath:@"me/events" params:params httpMethod:@"POST" needsLogin:YES success:^(id result) {
             
             if (successBlock) {
-                ((SFCreateObjectBlock)successBlock)([result objectForKey:@"id"]);
+                successBlock([result objectForKey:@"id"]);
             }
             
         } failure:failureBlock cancel:cancelBlock];
@@ -546,7 +539,7 @@ static SFSocialFacebook *_instance;
     SFFacebookRequest *request = [self facebookRequestWithGraphPath:[NSString stringWithFormat:@"%@/invited", eventId] params:params httpMethod:@"POST" needsLogin:YES success:^(id result) {
         
         if (successBlock) {
-            ((SFBasicBlock)successBlock)();
+            successBlock();
         }
         
     } failure:failureBlock cancel:cancelBlock];
@@ -623,9 +616,22 @@ static SFSocialFacebook *_instance;
         NSString *nextPage = [self nextPageUrl:[result objectForKey:@"paging"]];
 		
 		if (successBlock) {
-            ((SFListObjectsBlock)successBlock)(users, nextPage);
+            successBlock(users, nextPage);
 		}
         [users release];
+        
+    } failure:failureBlock cancel:cancelBlock];
+    
+    return request;
+}
+
+- (SFFacebookRequest *)attendEvent:(NSString *)eventId success:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    SFFacebookRequest *request = [self facebookRequestWithGraphPath:[NSString stringWithFormat:@"%@/attending", eventId] params:[NSMutableDictionary dictionary] httpMethod:@"POST" needsLogin:YES success:^(id result) {
+        
+        if (successBlock) {
+            successBlock();
+        }
         
     } failure:failureBlock cancel:cancelBlock];
     
@@ -754,7 +760,7 @@ static SFSocialFacebook *_instance;
         NSString *nextPage = [self nextPageUrl:[result objectForKey:@"paging"]];
         
         if (successBlock) {
-            ((SFListObjectsBlock)successBlock)(posts, nextPage);
+            successBlock(posts, nextPage);
         }
         [post release];
         
@@ -763,149 +769,43 @@ static SFSocialFacebook *_instance;
     return request;
 }
 
-//- (id)initWithAppId:(NSString *)applicationId andAuthorizationSingleton:(SFAuthorization *)authorizationSingleton andDelegate:(id)_delegate
-//{
-//    self = [super init];
-//    if (self) {
-//        _delegate = _delegate;
-//        _appId = [applicationId retain];
-//        authSingleton = [authorizationSingleton retain];
-//        _facebook = [[Facebook alloc] initWithAppId:_appId andAuthorizationSingleton:authSingleton];
-//    }
-//    return self;
-//}
-//
-//- (id) initWithAppId: (NSString *) applicationId
-//           andAreaId: (int) area_Id
-//andAuthorizationSingleton: (SFAuthorization *) authorizationSingleton
-//andShingleServerPath: (NSString *) shinglePath
-//         andDelegate:(id)_delegate{
-//    
-//	if ((self = [super init])) {
-//        [self setAppId:applicationId 
-//             andAreaId:areaId 
-//andAuthorizationSingleton:authSingleton 
-//  andShingleServerPath:shinglePath 
-//           andDelegate:_delegate];
-//        return self;
-//	}
-//    
-//	return nil;
-//}
-//
-//- (void) setAppId: (NSString *) applicationId
-//        andAreaId: (int) area_Id
-//andAuthorizationSingleton: (SFAuthorization *) authorizationSingleton
-//andShingleServerPath: (NSString *) shinglePath
-//      andDelegate:(id)_delegate{
-//	
-//    _delegate = _delegate;
-//    _appId = [applicationId retain];
-//    areaId = area_Id;
-//    authSingleton = [authorizationSingleton retain];
-//    shingleServerPath = [shinglePath retain];
-//    
-//    facebookUserId = @"";
-//    
-//    _facebook = [[Facebook alloc] initWithAppId:_appId andAuthorizationSingleton:authSingleton];
-//    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@/%@%i",shingleServerPath, GET_FACEBOOK_WITH_AREA, areaId]];
-//    
-//    receivedData = [[NSMutableData data] retain];
-//    
-//    conn = [[NSURLConnection alloc] initWithRequest:[NSURLRequest requestWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:30] delegate:self startImmediately:TRUE];
-//    
-//}
-
-//#pragma mark - NSURLConnectionDataDelegate
-//
-//- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response
-//{
-//    // Discard all previously received data.
-//    [_receivedData setLength:0];
-//}
-//
-//- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data
-//{
-//    // Append the new data to the receivedData.
-//    [_receivedData appendData:data];     
-//}
-//
-//- (void)connectionDidFinishLoading:(NSURLConnection *)connection
-//{
-//    if (_successBlock || _failureBlock) {
-//    
-////        NSString *json =  [[[NSString alloc] initWithData:receivedData encoding:NSStringEnumerationByComposedCharacterSequences] autorelease];
-////        NSArray *areaInfo = [json JSONValue];
-////        
-////        if (areaInfo != nil && [areaInfo count] != 0) {
-////            facebookUserId = [[[(NSDictionary *)[areaInfo objectAtIndex:0] objectForKey:@"account_number"] description] retain];
-////            NSLog(@"facebookUserId = %@", facebookUserId);
-////            
-////            NSString* access_token = [(NSDictionary *)[areaInfo objectAtIndex:0] objectForKey:@"access_token"];
-////            if([access_token length] > 0){
-////                authSingleton.token = access_token;
-////                authSingleton.logged = YES;
-////                _facebook.accessToken = access_token;
-////                NSLog(@"auth_token = %@", authSingleton.token);
-////            }
-////            
-////            
-////            if(_delegate && [_delegate respondsToSelector:@selector(socialFacebookDidReceiveConfiguration)]){
-////                [_delegate socialFacebookDidReceiveConfiguration];
-////            }
-////        }
-////        else {
-////            if(_delegate && [_delegate respondsToSelector:@selector(socialFacebookDidFailReceivingConfiguration)]){
-////                [_delegate socialFacebookDidFailReceivingConfiguration];
-////            }
-////        }
-//        
-//        
-//        switch (_currentAPICall) {
-//            case SFAPICallAppLogin: {
-//                NSString *response = [[NSString alloc] initWithData:_receivedData encoding:NSUTF8StringEncoding];
-//                NSArray *components = [response componentsSeparatedByString:@"="];
-//                [response release];
-//                
-//                NSString *accessToken = nil;
-//                
-//                if ([components count] == 2) {
-//                    // Success
-//                    accessToken = [components objectAtIndex:1];
-//                    if (_successBlock) {
-//                        ((SFAppLoginBlock)_successBlock)(accessToken);
-//                    }
-//                } else {
-//                    // Error
-//                    if (_failureBlock) {
-//                        _failureBlock([self errorWithDescription:@"Could not parse App Login Acess Token"]);
-//                    }
-//                }
-//                
-//                break;
-//            }
-//            default:
-//                break;
-//        }
-//    }
-//
-//    // release the connection, and the data object
-//    [self releaseRequestObjects];
-//}
-
-
-- (void) handleLike: (NSString *) postId {
-		[postId retain];
-		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@/likes?identifier=pagelike", postId] andParams:[NSMutableDictionary dictionaryWithObject:_appId forKey:@"app_id"] andHttpMethod:@"POST" andDelegate:self];
-		[postId release];
+- (SFURLRequest *)shingleConfigurationWithUrl:(NSString *)url andArea:(NSInteger)area success:(SFShingleBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    return [SFURLRequest requestWithURL:[NSString stringWithFormat:@"%@facebook/getFacebook?area_id=%d", url, area] success:^(NSData *receivedData) {
+        
+        NSString *json = [[NSString alloc] initWithData:receivedData encoding:NSUTF8StringEncoding];
+        id result = [json JSONValue];
+        [json release];
+        
+        NSString *profileId = nil;
+        
+        if ([result isKindOfClass:[NSArray class]]) {
+            profileId = [[result objectAtIndex:0] objectForKey:@"account_number"];
+            SFDLog(@"Shingle profileId = %@", profileId);
+            
+            if (successBlock) {
+                successBlock(profileId, NO);
+            }
+        }
+        else if (failureBlock) {
+            failureBlock(SFError(@"Could not parse server response"));
+        }
+        
+    } failure:failureBlock cancel:cancelBlock];
 }
 
-
-- (void) handleUnlike: (NSString *) postId {
-		[postId retain];
-		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@/likes?identifier=pageunlike", postId] andParams:[NSMutableDictionary dictionaryWithObject:_appId forKey:@"app_id"] andHttpMethod:@"DELETE" andDelegate:self];
-		[postId release];
-}
+//- (void) handleLike: (NSString *) postId {
+//		[postId retain];
+//		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@/likes?identifier=pagelike", postId] andParams:[NSMutableDictionary dictionaryWithObject:_appId forKey:@"app_id"] andHttpMethod:@"POST" andDelegate:self];
+//		[postId release];
+//}
+//
+//
+//- (void) handleUnlike: (NSString *) postId {
+//		[postId retain];
+//		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@/likes?identifier=pageunlike", postId] andParams:[NSMutableDictionary dictionaryWithObject:_appId forKey:@"app_id"] andHttpMethod:@"DELETE" andDelegate:self];
+//		[postId release];
+//}
 
 /*
  - (void) handleComment: (NSString *) comment InPost: (NSString *) postId {
@@ -937,30 +837,6 @@ static SFSocialFacebook *_instance;
  }
  */
 
-// This method is just to allow the user to "Attend" the main event from where all posts are being shown
-
-//- (void) eventMarkAttending: (NSString *)eventId {
-//		[eventId retain];
-//		NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
-//		[pars setObject:_appId forKey:@"app_id"];
-//		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@/attending", eventId] andParams:pars andHttpMethod:@"POST" andDelegate:self];
-//		[eventId release];
-//		[pars release];
-//}
-//
-//- (void) getEvent: (NSString*) eventId {
-//		[eventId retain];
-//		NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
-//		
-//		[pars setObject:_appId forKey:@"app_id"];
-//		
-//		
-//		
-//		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@?identifier=event", eventId] andParams:pars andHttpMethod:@"GET" andDelegate:self];
-//		[eventId release];
-//		[pars release];
-//}
-//
 //- (void) getNumLikesFromPage: (NSString *)pageId {
 //	NSLog(@"pageId: %@", pageId);
 //	
@@ -974,36 +850,6 @@ static SFSocialFacebook *_instance;
 //}
 
 
-//	else if ([url rangeOfString:@"identifier=event"].length > 0.0) {
-//		//NSLog(@"result: %@", result);
-//		
-//		SFSimpleEvent *ev = [[[SFSimpleEvent alloc] init] autorelease];
-//		
-//		[ev setEventId:[result objectForKey:@"id"]];
-//		[ev setEventName:[result objectForKey:@"name"]];
-//		[ev setEventStartTime:[self parseToDate:[result objectForKey:@"start_time"]]];
-//		[ev setEventEndTime:[self parseToDate:[result objectForKey:@"end_time"]]];
-//		
-//		if ([result objectForKey:@"description"] != nil) {
-//			[ev setEventDescription:[result objectForKey:@"description"]];
-//		}
-//		
-//		if ([result objectForKey:@"location"] != nil) {
-//			[ev setEventLocation:[result objectForKey:@"location"]];
-//		}		
-//		
-//		if ([result objectForKey:@"start_time"] != nil) {
-//			[ev setEventStartTime:[self dateFromString:(NSString *)[result objectForKey:@"start_time"]]];
-//		}		
-//		
-//		if ([result objectForKey:@"end_time"] != nil) {
-//			[ev setEventEndTime:[self dateFromString:(NSString *)[result objectForKey:@"end_time"]]];
-//		}		
-//        
-//		if ([_delegate respondsToSelector:@selector(socialFacebook:DidReceiveEvent:)]) {
-//			[_delegate socialFacebook:self DidReceiveEvent:ev];
-//		}
-//	}
 //	else if ([url rangeOfString:@"identifier=likes"].length > 0.0) {
 //		//NSLog(@"likes: %@", result);
 //		if ([_delegate respondsToSelector:@selector(socialFacebook:DidReceiveNumberOfLikes:)]) {
@@ -1191,11 +1037,6 @@ static SFSocialFacebook *_instance;
     [_dateFormatter release];
     [_facebookTimeZone release];
     [_localTimeZone release];
-    
-    [shingleServerPath release];
-	[pendingActionParams release];
-	[facebookUserId release];
-	[loggedUserId release];
     
 	SFDLog(@"SFSocialFacebook deallocated");
     

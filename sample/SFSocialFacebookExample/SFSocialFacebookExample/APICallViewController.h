@@ -8,10 +8,16 @@
 
 #import <UIKit/UIKit.h>
 
+@class SFURLRequest;
+@class SFFacebookRequest;
+
 @interface APICallViewController : UIViewController <UITableViewDelegate, UITableViewDataSource> {
     UITableView *_tableView;
     NSArray *_menuOptions;
     NSString *_eventId;
+    
+    SFURLRequest *_urlRequest;
+    SFFacebookRequest *_facebookRequest;
 }
 
 - (id)initWithMenu:(NSString *)menu;

@@ -67,6 +67,16 @@
     [self refreshButtonClicked:refreshButton];
 }
 
+- (void)viewWillDisappear:(BOOL)animated
+{
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release], _facebookRequest = nil;
+    }
+    
+    [super viewWillDisappear:animated];
+}
+
 - (void)viewDidUnload
 {   
     [_nextPageURL release], _nextPageURL = nil;

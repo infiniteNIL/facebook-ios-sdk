@@ -13,8 +13,9 @@
 #import "SFEvent.h"
 #import "SFFacebookRequest.h"
 
-typedef void (^SFFailureBlock)(NSError *error);
+typedef void (^SFShingleBlock)(NSString *profile, BOOL needsLogin);
 typedef void (^SFBasicBlock)(void);
+typedef void (^SFFailureBlock)(NSError *error);
 typedef void (^SFDidNotLoginBlock)(BOOL cancelled);
 typedef void (^SFListObjectsBlock)(NSArray *objects, NSString *nextPageUrl);
 typedef void (^SFCreateObjectBlock)(NSString *objectId);
@@ -49,22 +50,12 @@ typedef enum {
     NSDateFormatter     *_dateFormatter;
     NSTimeZone          *_facebookTimeZone;
     NSTimeZone          *_localTimeZone;
-    
-	NSString *facebookUserId;
-    int areaId;
-	
-    NSString *shingleServerPath;
-	
-	SEL pendingAction;
-	NSMutableDictionary *pendingActionParams;
 }
 
 + (SFSocialFacebook *)sharedInstance;
 + (SFSocialFacebook *)sharedInstanceWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix andPermissions:(NSArray *)permissions;
 
-
-@property (nonatomic, retain) NSString *facebookUserId;
-@property (nonatomic, retain) NSString *loggedUserId;
+- (SFURLRequest *)shingleConfigurationWithUrl:(NSString *)url andArea:(NSInteger)area success:(SFShingleBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 - (BOOL)handleOpenURL:(NSURL *)url;
 - (BOOL)isSessionValid:(BOOL)needsLogin;
@@ -98,13 +89,13 @@ typedef enum {
 - (SFFacebookRequest *)invitedUsersForEvent:(NSString *)eventId rsvpStatus:(SFUserRSVPStatus)rsvpStatus pageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 - (SFFacebookRequest *)invitedUsersNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
-- (void) handleLike: (NSString *) postId;
+/** requires rsvp_event permission **/
+- (SFFacebookRequest *)attendEvent:(NSString *)eventId success:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+
+
+//- (void) handleLike: (NSString *) postId;
 //- (void) handleComment: (NSString *) comment InPost: (NSString *) postId;
 //- (void) handleUnlike: (NSString *) postId;
-
-- (void) getEvent: (NSString*) eventId;
-- (void) eventMarkAttending: (NSString *)eventId;
-- (void) getNumLikesFromPage: (NSString *)pageId;
-- (void) getAccessTokenWithClientId:(NSString*)client_id andClientSecret:(NSString*)client_secret;
+//- (void) getNumLikesFromPage: (NSString *)pageId;
 
 @end

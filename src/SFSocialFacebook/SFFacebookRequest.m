@@ -106,6 +106,8 @@
         if (_request) {
             [_request cancel];
         } else {
+            _isFinished = YES; // This line must be first
+            
             if (_cancelBlock) {
                 _cancelBlock();
             }
@@ -123,8 +125,6 @@
  */
 - (void)releaseObjects
 {
-    _isFinished = YES; // This line must be first
-    
     [_request release], _request = nil;
     [_successBlock release], _successBlock = nil;
     [_failureBlock release], _failureBlock = nil;
@@ -150,6 +150,8 @@
  */
 - (void)request:(FBRequest *)request didFailWithError:(NSError *)error {
     
+    _isFinished = YES; // This line must be first
+    
 	SFDLog(@"Error: %@", [error localizedDescription]);
     
     if (_failureBlock) {
@@ -167,6 +169,8 @@
  */
 - (void)request:(FBRequest *)request didLoad:(id)result {
     
+    _isFinished = YES; // This line must be first
+    
     SFDLog(@"Request loaded with result: %@", result);
     
     if (_successBlock) {
@@ -177,6 +181,8 @@
 
 - (void)requestDidCancel:(FBRequest *)request
 {
+    _isFinished = YES; // This line must be first
+    
     SFDLog(@"Request cancelled");
     
     if (_cancelBlock) {
