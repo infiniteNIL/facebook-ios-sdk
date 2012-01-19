@@ -126,7 +126,7 @@
                                                                        [button setEnabled:YES];
                                                                        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
                                                                    } cancel:^{
-                                                                       UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Request cancelled" message:nil delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+                                                                       UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"Feed request was cancelled" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
                                                                        [alert show];
                                                                        [alert release];
                                                                        [button setEnabled:YES];
@@ -159,7 +159,7 @@
                                                                               [button setEnabled:(_nextPageURL != nil)];
                                                                               [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
                                                                           } cancel:^{
-                                                                              UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Request cancelled" message:nil delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+                                                                              UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"Feed next page request was cancelled" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
                                                                               [alert show];
                                                                               [alert release];
                                                                               [button setEnabled:(_nextPageURL != nil)];
@@ -188,8 +188,9 @@
     }
     
     SFSimplePost *post = [_posts objectAtIndex:[indexPath row]];
-    [[cell textLabel] setText:[post userName]];
-    [[cell detailTextLabel] setText:[post message]];
+    cell.textLabel.text = post.from.name;
+    cell.detailTextLabel.text = post.message;
+    
     return cell;
 }
 

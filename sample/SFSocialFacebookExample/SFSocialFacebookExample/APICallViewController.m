@@ -233,7 +233,7 @@
                         
             int randomNumber = arc4random() % [friends count];
             SFSimpleUser *usertTo = [[SFSimpleUser alloc] init];
-            usertTo.objectId = [[friends objectAtIndex:randomNumber] userId];
+            usertTo.objectId = [[friends objectAtIndex:randomNumber] objectId];
             
             SFSimplePost *post = [[SFSimplePost alloc] init];
             post.to = [NSArray arrayWithObject:usertTo];

@@ -12,9 +12,7 @@
 @implementation SFSimplePost
 
 @synthesize postId;
-@synthesize userId;
-@synthesize userName;
-@synthesize userImageUrl;
+@synthesize from;
 @synthesize message;
 @synthesize picture;
 @synthesize link;
@@ -112,9 +110,7 @@
 
 - (void)dealloc {
 	[postId release];
-	[userId release];
-	[userName release];
-	[userImageUrl release];
+    [from release];
 	[message release];
 	[picture release];
 	[link release];

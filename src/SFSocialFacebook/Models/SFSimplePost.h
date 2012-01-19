@@ -8,15 +8,15 @@
 
 #import <Foundation/Foundation.h>
 
+@class SFSimpleUser;
+
 
 @interface SFSimplePost : NSObject {
 	BOOL _userLikesIt;
 }
 
 @property(nonatomic, retain) NSString *postId;
-@property(nonatomic, retain) NSString *userId;
-@property(nonatomic, retain) NSString *userName;
-@property(nonatomic, retain) NSString *userImageUrl;
+@property(nonatomic, retain) SFSimpleUser *from;
 @property(nonatomic, retain) NSString *message;
 @property(nonatomic, retain) NSString *picture;
 @property(nonatomic, retain) NSString *link;

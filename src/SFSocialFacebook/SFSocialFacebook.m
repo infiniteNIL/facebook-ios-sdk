@@ -732,9 +732,17 @@ static SFSocialFacebook *_instance;
         for (id ob in [result objectForKey:@"data"]) {
             post = [[SFSimplePost alloc] init];
             [post setPostId:(NSString *)[ob objectForKey:@"id"]];
-            [post setUserId:[[ob objectForKey:@"from"] objectForKey:@"id"]];
-            [post setUserName:(NSString *)[[ob objectForKey:@"from"] objectForKey:@"name"]];
-            [post setUserImageUrl:[NSString stringWithFormat:@"http://graph.facebook.com/%@/picture", [post userId]]];
+            
+            NSDictionary *fromJson = [ob objectForKey:@"from"];
+            
+            if (fromJson) {
+                SFSimpleUser *from = [[SFSimpleUser alloc] init];
+                from.objectId = [fromJson objectForKey:@"id"];
+                from.name = [fromJson objectForKey:@"name"];
+                
+                post.from = from;
+            }
+            
             [post setMessage:(NSString *)[ob objectForKey:@"message"]];
             [post setPicture:[ob objectForKey:@"picture"]];
             [post setLink:[ob objectForKey:@"link"]];
