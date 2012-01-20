@@ -13,6 +13,13 @@
 @synthesize objectId;
 @synthesize name;
 
+- (void)dealloc
+{
+    [objectId release];
+    [name release];
+    
+    [super dealloc];
+}
 
 - (NSString *)pictureUrl
 {

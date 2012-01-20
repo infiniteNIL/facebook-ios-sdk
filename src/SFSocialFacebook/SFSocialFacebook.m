@@ -29,7 +29,7 @@
 - (SFFacebookRequest *)facebookRequestWithGraphPath:(NSString *)graphPath params:(NSMutableDictionary *)params needsLogin:(BOOL)needsLogin success:(void (^)(id result))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
 - (SFFacebookRequest *)facebookRequestWithGraphPath:(NSString *)graphPath params:(NSMutableDictionary *)params httpMethod:(NSString *)httpMethod needsLogin:(BOOL)needsLogin success:(void (^)(id result))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
 
-- (SFFacebookRequest *)listProfileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)profileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 - (void)clearUserInfo;
 - (NSDictionary *)parseURLParams:(NSString *)query;
@@ -291,12 +291,12 @@ static SFSocialFacebook *_instance;
 
 - (SFFacebookRequest *)profileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
-    return [self listProfileFeedWithGraphPath:[NSString stringWithFormat:@"%@/feed?date_format=U&limit=%d", profileId, pageSize] needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
+    return [self profileFeedWithGraphPath:[NSString stringWithFormat:@"%@/feed?date_format=U&limit=%d&fields=id,from,message,picture,link,name,caption,description,source,type,created_time,updated_time", profileId, pageSize] needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
 - (SFFacebookRequest *)profileFeedNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
-    return [self listProfileFeedWithGraphPath:nextPageUrl needsLogin:NO success:successBlock failure:failureBlock cancel:cancelBlock];
+    return [self profileFeedWithGraphPath:nextPageUrl needsLogin:NO success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
 - (void)publishPost:(SFSimplePost *)post success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
@@ -723,17 +723,17 @@ static SFSocialFacebook *_instance;
     return [[_dateFormatter dateFromString:dateString] timeIntervalSince1970];
 }
 
-- (SFFacebookRequest *)listProfileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (SFFacebookRequest *)profileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     SFFacebookRequest *request = [self facebookRequestWithGraphPath:[graphPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] needsLogin:needsLogin success:^(id result) {
         SFSimplePost *post = nil;
         NSMutableArray *posts = [[NSMutableArray alloc] init];
         
-        for (id ob in [result objectForKey:@"data"]) {
+        for (id obj in [result objectForKey:@"data"]) {
             post = [[SFSimplePost alloc] init];
-            [post setPostId:(NSString *)[ob objectForKey:@"id"]];
+            post.objectId = [obj objectForKey:@"id"];
             
-            NSDictionary *fromJson = [ob objectForKey:@"from"];
+            NSDictionary *fromJson = [obj objectForKey:@"from"];
             
             if (fromJson) {
                 SFSimpleUser *from = [[SFSimpleUser alloc] init];
@@ -744,23 +744,17 @@ static SFSocialFacebook *_instance;
                 [from release];
             }
             
-            [post setMessage:(NSString *)[ob objectForKey:@"message"]];
-            [post setPicture:[ob objectForKey:@"picture"]];
-            [post setLink:[ob objectForKey:@"link"]];
-            [post setName:[ob objectForKey:@"name"]];
-            [post setCaption:[ob objectForKey:@"caption"]];
-            [post setPostDescription:[ob objectForKey:@"description"]];
-            [post setSource:[ob objectForKey:@"source"]];
-            [post setType:[ob objectForKey:@"type"]];
+            post.message = [obj objectForKey:@"message"];
+            post.picture = [obj objectForKey:@"picture"];
+            post.link = [obj objectForKey:@"link"];
+            post.name = [obj objectForKey:@"name"];
+            post.caption = [obj objectForKey:@"caption"];
+            post.postDescription = [obj objectForKey:@"description"];
+            post.source = [obj objectForKey:@"source"];
+            post.type = [obj objectForKey:@"type"];
             
-            [post setCreatedTime:[NSDate dateWithTimeIntervalSince1970:[[ob objectForKey:@"created_time"] doubleValue]]];
-            [post setUpdatedTime:[NSDate dateWithTimeIntervalSince1970:[[ob objectForKey:@"updated_time"] doubleValue]]];
-            //TODO: Comments
-            /*
-             if ([ob objectForKey:@"comments"] != nil) {
-             [post setNumComments:[NSNumber numberWithInt:[[ob objectForKey:@"comments"] objectForKey:@"count"]]];
-             }
-             */
+            post.createdTime = [NSDate dateWithTimeIntervalSince1970:[[obj objectForKey:@"created_time"] doubleValue]];
+            post.updatedTime = [NSDate dateWithTimeIntervalSince1970:[[obj objectForKey:@"updated_time"] doubleValue]];
             
             [posts addObject:post];
             [post release];

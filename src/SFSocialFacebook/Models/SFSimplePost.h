@@ -11,11 +11,9 @@
 @class SFSimpleUser;
 
 
-@interface SFSimplePost : NSObject {
-	BOOL _userLikesIt;
-}
+@interface SFSimplePost : NSObject
 
-@property(nonatomic, retain) NSString *postId;
+@property(nonatomic, retain) NSString *objectId;
 @property(nonatomic, retain) SFSimpleUser *from;
 @property(nonatomic, retain) NSString *message;
 @property(nonatomic, retain) NSString *picture;
@@ -25,20 +23,16 @@
 @property(nonatomic, retain) NSString *postDescription;
 @property(nonatomic, retain) NSString *source;
 @property(nonatomic, retain) NSString *type;
-@property(nonatomic, retain) NSNumber *numLikes;
-@property(nonatomic, retain) NSNumber *numComments;
-@property(nonatomic, retain) NSArray *comments;
-@property(nonatomic, retain) NSDate *createdTime;
-@property(nonatomic, retain) NSDate *updatedTime;
 @property(nonatomic, retain) NSArray *to;
 @property(nonatomic, retain) NSString *actionName;
 @property(nonatomic, retain) NSString *actionLink;
+@property(nonatomic, retain) NSDate *createdTime;
+@property(nonatomic, retain) NSDate *updatedTime;
 
-- (BOOL)userLikesIt;
+//@property(nonatomic, retain) NSNumber *numLikes;
+//@property(nonatomic, retain) NSNumber *numComments;
+//@property(nonatomic, retain) NSArray *comments;
+
 - (NSString *)getIntervalDescriptionFromCreationDate;
 
 @end
-
-
-
-

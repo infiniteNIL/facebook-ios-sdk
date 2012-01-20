@@ -11,7 +11,7 @@
 
 @implementation SFSimplePost
 
-@synthesize postId;
+@synthesize objectId;
 @synthesize from;
 @synthesize message;
 @synthesize picture;
@@ -21,28 +21,39 @@
 @synthesize postDescription;
 @synthesize source;
 @synthesize type;
-@synthesize numLikes;
-@synthesize numComments;
-@synthesize comments;
-@synthesize createdTime;
-@synthesize updatedTime;
 @synthesize to;
 @synthesize actionName;
 @synthesize actionLink;
+@synthesize createdTime;
+@synthesize updatedTime;
 
-#pragma mark - Methods
+//@synthesize numLikes;
+//@synthesize numComments;
+//@synthesize comments;
 
-- (id)init {
-	if ((self = [super init])) {
-		_userLikesIt = NO;
-	}
-	return self;
+- (void)dealloc {
+	[objectId release];
+    [from release];
+	[message release];
+	[picture release];
+	[link release];
+	[name release];
+	[caption release];
+	[postDescription release];
+	[source release];
+	[type	release];
+    [to release];
+    [actionName release];
+    [actionLink release];
+    [createdTime release];
+    [updatedTime release];
+    
+//	[numLikes release];
+//	[numComments release];
+//	[comments release];
+    
+    [super dealloc];
 }
-
-- (BOOL)userLikesIt {
-	return _userLikesIt;
-}
-
 
 - (NSString *)getIntervalDescriptionFromCreationDate {
 	int timeDifference = (int)[[self createdTime] timeIntervalSinceNow];
@@ -104,29 +115,6 @@
 	}
 
 	return description;
-}
-
-#pragma mark - Dealloc
-
-- (void)dealloc {
-	[postId release];
-    [from release];
-	[message release];
-	[picture release];
-	[link release];
-	[name release];
-	[caption release];
-	[postDescription release];
-	[source release];
-	[type	release];
-	[numLikes release];
-	[numComments release];
-	[comments release];
-    [createdTime release];
-    [updatedTime release];
-    [to release];
-    
-    [super dealloc];
 }
 
 @end
