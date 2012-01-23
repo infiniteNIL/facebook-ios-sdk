@@ -28,10 +28,9 @@
 @property(nonatomic, retain) NSString *actionLink;
 @property(nonatomic, retain) NSDate *createdTime;
 @property(nonatomic, retain) NSDate *updatedTime;
+@property(nonatomic) NSUInteger numberOfLikes;
+@property(nonatomic) NSUInteger numberOfComments;
 
-//@property(nonatomic, retain) NSNumber *numLikes;
-//@property(nonatomic, retain) NSNumber *numComments;
-//@property(nonatomic, retain) NSArray *comments;
 
 - (NSString *)getIntervalDescriptionFromCreationDate;
 

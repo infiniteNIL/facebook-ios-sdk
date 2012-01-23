@@ -291,7 +291,7 @@ static SFSocialFacebook *_instance;
 
 - (SFFacebookRequest *)profileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
-    return [self profileFeedWithGraphPath:[NSString stringWithFormat:@"%@/feed?date_format=U&limit=%d&fields=id,from,message,picture,link,name,caption,description,source,type,created_time,updated_time", profileId, pageSize] needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
+    return [self profileFeedWithGraphPath:[NSString stringWithFormat:@"%@/feed?date_format=U&limit=%d&fields=id,from,message,picture,link,name,caption,description,source,type,created_time,updated_time,comments,likes", profileId, pageSize] needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
 - (SFFacebookRequest *)profileFeedNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
@@ -755,6 +755,16 @@ static SFSocialFacebook *_instance;
             
             post.createdTime = [NSDate dateWithTimeIntervalSince1970:[[obj objectForKey:@"created_time"] doubleValue]];
             post.updatedTime = [NSDate dateWithTimeIntervalSince1970:[[obj objectForKey:@"updated_time"] doubleValue]];
+            
+            NSDictionary *comments = [obj objectForKey:@"comments"];
+            if (comments) {
+                post.numberOfComments = [[comments objectForKey:@"count"] intValue];
+            }
+            
+            NSDictionary *likes = [obj objectForKey:@"likes"];
+            if (likes) {
+                post.numberOfLikes = [[likes objectForKey:@"count"] intValue];
+            }
             
             [posts addObject:post];
             [post release];

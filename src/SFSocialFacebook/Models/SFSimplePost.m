@@ -26,10 +26,9 @@
 @synthesize actionLink;
 @synthesize createdTime;
 @synthesize updatedTime;
+@synthesize numberOfLikes;
+@synthesize numberOfComments;
 
-//@synthesize numLikes;
-//@synthesize numComments;
-//@synthesize comments;
 
 - (void)dealloc {
 	[objectId release];
@@ -47,10 +46,6 @@
     [actionLink release];
     [createdTime release];
     [updatedTime release];
-    
-//	[numLikes release];
-//	[numComments release];
-//	[comments release];
     
     [super dealloc];
 }
