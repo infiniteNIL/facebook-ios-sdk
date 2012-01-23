@@ -8,6 +8,7 @@
 
 #import "TimelineViewController.h"
 #import "SFSocialFacebook.h"
+#import "APICallViewController.h"
 
 @interface TimelineViewController (Private)
 
@@ -170,6 +171,14 @@
 
 #pragma mark - UITableViewDelegate
 
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    SFSimplePost *post = [_posts objectAtIndex:indexPath.row];
+    
+    UIViewController *ctrl = [[APICallViewController alloc] initWithPostId:post.objectId];
+    [self.navigationController pushViewController:ctrl animated:YES];
+    [ctrl release];
+}
 
 #pragma mark - UITableViewDataSource
 

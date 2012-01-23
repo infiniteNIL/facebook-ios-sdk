@@ -12,10 +12,4 @@
 
 + (Menus *)sharedInstance;
 
-- (NSArray *)main;
-- (NSArray *)login;
-- (NSArray *)newsFeed;
-- (NSArray *)events;
-- (NSArray *)event;
-
 @end

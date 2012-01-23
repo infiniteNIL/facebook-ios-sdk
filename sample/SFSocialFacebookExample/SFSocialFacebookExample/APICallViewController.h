@@ -14,7 +14,7 @@
 @interface APICallViewController : UIViewController <UITableViewDelegate, UITableViewDataSource> {
     UITableView *_tableView;
     NSArray *_menuOptions;
-    NSString *_eventId;
+    NSString *_objectId;
     
     SFURLRequest *_urlRequest;
     SFFacebookRequest *_facebookRequest;
@@ -22,5 +22,6 @@
 
 - (id)initWithMenu:(NSString *)menu;
 - (id)initWithEventId:(NSString *)eventId;
+- (id)initWithPostId:(NSString *)postId;
 
 @end

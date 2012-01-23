@@ -9,6 +9,7 @@
 #import "ObjectPickerController.h"
 #import "SFSimpleUser.h"
 #import "SFEvent.h"
+#import "SFComment.h"
 
 @interface ObjectPickerController (Private)
 
@@ -62,10 +63,13 @@
     
     switch (_type) {
         case ObjectTypeUser:
-            self.navigationItem.title = @"Friends";
+            self.navigationItem.title = @"Users";
             break;
         case ObjectTypeEvent:
             self.navigationItem.title = @"Events";
+            break;
+        case ObjectTypeComment:
+            self.navigationItem.title = @"Comments";
             break;
         default:
             break;
@@ -164,18 +168,34 @@
         cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:cellId] autorelease];
     }
     
-    SFObject *object = [_objects objectAtIndex:indexPath.row];
-    
-    cell.accessoryType = ([_selectedObjects objectForKey:[object objectId]])? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
-    
-    [cell.textLabel setText:object.name];
-    
-    if (_type == ObjectTypeEvent) {
-        SFEvent *event = (SFEvent *)object;
-        
-        [cell.detailTextLabel setText:[NSString stringWithFormat:@"%@ ~ %@", [_dateFormatter stringFromDate:[event startTime]], [_dateFormatter stringFromDate:[event endTime]]]];
-    } else {
-//        [cell.imageView setImage:[UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:[object pictureUrl]]]]];
+    switch (_type) {
+        case ObjectTypeUser:
+        case ObjectTypeEvent:
+        {
+            SFObject *object = [_objects objectAtIndex:indexPath.row];
+            
+            cell.accessoryType = ([_selectedObjects objectForKey:[object objectId]])? UITableViewCellAccessoryCheckmark : UITableViewCellAccessoryNone;
+            cell.textLabel.text = object.name;
+            
+            if (_type == ObjectTypeEvent) {
+                SFEvent *event = (SFEvent *)object;
+                cell.detailTextLabel.text = [NSString stringWithFormat:@"%@ ~ %@", [_dateFormatter stringFromDate:[event startTime]], [_dateFormatter stringFromDate:[event endTime]]];
+            } else {
+                //        cell.imageView.image = [UIImage imageWithData:[NSData dataWithContentsOfURL:[NSURL URLWithString:[object pictureUrl]]]];
+            }
+        }
+            break;
+        case ObjectTypeComment:
+        {
+            SFComment *object = [_objects objectAtIndex:indexPath.row];
+            
+            cell.textLabel.text = object.from.name;
+            cell.detailTextLabel.text = object.message;
+
+        }
+            break;
+        default:
+            break;
     }
     
     return cell;

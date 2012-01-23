@@ -9,6 +9,17 @@
 #import "Menus.h"
 #import "SFSimpleUser.h"
 
+@interface Menus (Private)
+
+- (NSArray *)main;
+- (NSArray *)login;
+- (NSArray *)newsFeed;
+- (NSArray *)events;
+- (NSArray *)event;
+- (NSArray *)post;
+
+@end
+
 @implementation Menus
 
 static Menus *_instance;
@@ -219,5 +230,27 @@ static Menus *_instance;
     return menu;
 }
 
+- (NSArray *)post
+{
+    NSDictionary *menuOption0 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Comments", @"title", 
+                                 @"listPostComments", @"method",
+                                 nil];
+    
+    NSDictionary *menuOption1 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Who likes this", @"title", 
+                                 @"listUsersWhoLikedPost", @"method",
+                                 nil];
+    
+    NSArray *menu = [NSArray arrayWithObjects:
+                     menuOption0, 
+                     menuOption1, 
+                     nil];
+    
+    [menuOption0 release];
+    [menuOption1 release];
+    
+    return menu;
+}
 
 @end

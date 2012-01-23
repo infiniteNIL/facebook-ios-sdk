@@ -36,8 +36,6 @@ typedef enum {
     NSString            *_appSecret;
     NSString            *_appAccessToken;
     
-    SFURLRequest        *_urlRequest;
-    
     SFBasicBlock        _loginBlock;
     SFDidNotLoginBlock  _notLoginBlock;
     SFBasicBlock        _logoutBlock;
@@ -92,10 +90,10 @@ typedef enum {
 /** requires rsvp_event permission **/
 - (SFFacebookRequest *)attendEvent:(NSString *)eventId success:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
+- (SFFacebookRequest *)commentsFromPost:(NSString *)postId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)commentsFromPostNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
-//- (void) handleLike: (NSString *) postId;
-//- (void) handleComment: (NSString *) comment InPost: (NSString *) postId;
-//- (void) handleUnlike: (NSString *) postId;
-//- (void) getNumLikesFromPage: (NSString *)pageId;
+- (SFFacebookRequest *)usersWhoLikedPost:(NSString *)postId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)usersWhoLikedPostNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 @end

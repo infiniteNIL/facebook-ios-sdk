@@ -10,6 +10,7 @@
 #import "SFUtil.h"
 #import "SBJSON.h"
 #import "SFURLRequest.h"
+#import "SFComment.h"
 
 /*
  
@@ -21,6 +22,10 @@
  
  */
 
+NSString *const kSFAccessTokenKey = @"FBAccessTokenKey";
+NSString *const kSFExpirationDateKey = @"FBExpirationDateKey";
+
+
 @interface SFSocialFacebook (Private)
 
 - (id)initWithAppId:(NSString *)appId appSecret:(NSString *)appSecret urlSchemeSuffix:(NSString *)urlSchemeSuffix andPermissions:(NSArray *)permissions;
@@ -30,7 +35,11 @@
 - (SFFacebookRequest *)facebookRequestWithGraphPath:(NSString *)graphPath params:(NSMutableDictionary *)params httpMethod:(NSString *)httpMethod needsLogin:(BOOL)needsLogin success:(void (^)(id result))successBlock failure:(void (^)(NSError *error))failureBlock cancel:(void (^)())cancelBlock;
 
 - (SFFacebookRequest *)profileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)commentsFromPostWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)usersWhoLikedPostWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
+- (void)saveUserInfo;
+- (void)loadUserInfo;
 - (void)clearUserInfo;
 - (NSDictionary *)parseURLParams:(NSString *)query;
 - (void)releaseDialogBlocks;
@@ -186,13 +195,7 @@ static SFSocialFacebook *_instance;
                 // Everything is OK
                 _facebook = [[Facebook alloc] initWithAppId:appId urlSchemeSuffix:urlSchemeSuffix andDelegate:self];
                 
-                // Retrieve authorization information
-                NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-                if ([defaults objectForKey:@"FBAccessTokenKey"] 
-                    && [defaults objectForKey:@"FBExpirationDateKey"]) {
-                    _facebook.accessToken = [defaults objectForKey:@"FBAccessTokenKey"];
-                    _facebook.expirationDate = [defaults objectForKey:@"FBExpirationDateKey"];
-                }
+                [self loadUserInfo];
                 
                 _appId = [appId copy];
                 _appSecret = [appSecret copy];
@@ -637,6 +640,26 @@ static SFSocialFacebook *_instance;
     return request;
 }
 
+- (SFFacebookRequest *)commentsFromPost:(NSString *)postId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    return [self commentsFromPostWithGraphPath:[NSString stringWithFormat:@"%@/comments?date_format=U&limit=%d", postId, pageSize] needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
+}
+
+- (SFFacebookRequest *)commentsFromPostNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    return [self commentsFromPostWithGraphPath:nextPageUrl needsLogin:NO success:successBlock failure:failureBlock cancel:cancelBlock];
+}
+
+- (SFFacebookRequest *)usersWhoLikedPost:(NSString *)postId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    return [self usersWhoLikedPostWithGraphPath:[NSString stringWithFormat:@"%@/likes?date_format=U&limit=%d", postId, pageSize] needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
+}
+
+- (SFFacebookRequest *)usersWhoLikedPostNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    return [self usersWhoLikedPostWithGraphPath:nextPageUrl needsLogin:NO success:successBlock failure:failureBlock cancel:cancelBlock];
+}
+
 #pragma mark - Private
 
 - (SFFacebookRequest *)facebookRequestWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(void (^)(id))successBlock failure:(void (^)(NSError *))failureBlock cancel:(void (^)())cancelBlock
@@ -658,13 +681,33 @@ static SFSocialFacebook *_instance;
     return [SFFacebookRequest requestWithFacebook:_facebook graphPath:graphPath params:params httpMethod:httpMethod needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
+- (void)saveUserInfo
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setObject:[_facebook accessToken] forKey:kSFAccessTokenKey];
+    [defaults setObject:[_facebook expirationDate] forKey:kSFExpirationDateKey];
+    [defaults synchronize];
+    
+    SFDLog(@"Access token info saved");
+}
+
+- (void)loadUserInfo
+{
+    // Retrieve authorization information
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([defaults objectForKey:kSFAccessTokenKey] && [defaults objectForKey:kSFExpirationDateKey]) {
+        _facebook.accessToken = [defaults objectForKey:kSFAccessTokenKey];
+        _facebook.expirationDate = [defaults objectForKey:kSFExpirationDateKey];
+    }
+}
+
 - (void)clearUserInfo
 {
     // Remove saved authorization information if it exists
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    if ([defaults objectForKey:@"FBAccessTokenKey"]) {
-        [defaults removeObjectForKey:@"FBAccessTokenKey"];
-        [defaults removeObjectForKey:@"FBExpirationDateKey"];
+    if ([defaults objectForKey:kSFAccessTokenKey]) {
+        [defaults removeObjectForKey:kSFAccessTokenKey];
+        [defaults removeObjectForKey:kSFExpirationDateKey];
         [defaults synchronize];
     }
 }
@@ -782,6 +825,78 @@ static SFSocialFacebook *_instance;
     return request;
 }
 
+- (SFFacebookRequest *)commentsFromPostWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    SFFacebookRequest *request  = [self facebookRequestWithGraphPath:graphPath needsLogin:needsLogin success:^(id result) {
+        
+        SFComment *comment;
+		NSMutableArray *comments = [[NSMutableArray alloc] init];
+		
+		for (NSDictionary *commentJson in [result objectForKey:@"data"]) {
+			comment = [[SFComment alloc] init];
+			comment.objectId = [commentJson objectForKey:@"id"];
+            comment.message = [commentJson objectForKey:@"message"];
+            comment.createdTime = [NSDate dateWithTimeIntervalSince1970:[[commentJson objectForKey:@"created_time"] doubleValue]];
+            comment.numberOfLikes = [[commentJson objectForKey:@"likes"] intValue];
+			
+            NSDictionary *fromJson = [commentJson objectForKey:@"from"];
+            if (fromJson) {
+                SFSimpleUser *fromUser = [[SFSimpleUser alloc] init];
+                fromUser.objectId = [fromJson objectForKey:@"id"];
+                fromUser.name = [fromJson objectForKey:@"name"];
+                
+                comment.from = fromUser;
+                [fromUser release];
+            }
+            
+			[comments addObject:comment];
+			[comment release];
+		}
+		
+        NSString *nextPage = [self nextPageUrl:[result objectForKey:@"paging"]];
+		
+		if (successBlock) {
+            successBlock(comments, nextPage);
+		}
+        [comments release];
+        
+        
+    } failure:failureBlock cancel:cancelBlock];
+    
+    return request;
+}
+
+- (SFFacebookRequest *)usersWhoLikedPostWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    SFFacebookRequest *request  = [self facebookRequestWithGraphPath:graphPath needsLogin:needsLogin success:^(id result) {
+        
+        SFSimpleUser *user;
+		NSMutableArray *users = [[NSMutableArray alloc] init];
+		
+		for (NSDictionary *userJson in [result objectForKey:@"data"]) {
+			user = [[SFSimpleUser alloc] init];
+			user.objectId = [userJson objectForKey:@"id"];
+            user.name = [userJson objectForKey:@"name"];
+            
+			[users addObject:user];
+			[user release];
+		}
+		
+        NSString *nextPage = [self nextPageUrl:[result objectForKey:@"paging"]];
+		
+		if (successBlock) {
+            successBlock(users, nextPage);
+		}
+        [users release];
+        
+        
+    } failure:failureBlock cancel:cancelBlock];
+    
+    return request;
+}
+
+#pragma mark - Shingle
+
 - (SFURLRequest *)shingleConfigurationWithUrl:(NSString *)url andArea:(NSInteger)area success:(SFShingleBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     return [SFURLRequest requestWithURL:[NSString stringWithFormat:@"%@facebook/getFacebook?area_id=%d", url, area] success:^(NSData *receivedData) {
@@ -807,76 +922,6 @@ static SFSocialFacebook *_instance;
     } failure:failureBlock cancel:cancelBlock];
 }
 
-//- (void) handleLike: (NSString *) postId {
-//		[postId retain];
-//		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@/likes?identifier=pagelike", postId] andParams:[NSMutableDictionary dictionaryWithObject:_appId forKey:@"app_id"] andHttpMethod:@"POST" andDelegate:self];
-//		[postId release];
-//}
-//
-//
-//- (void) handleUnlike: (NSString *) postId {
-//		[postId retain];
-//		[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@/likes?identifier=pageunlike", postId] andParams:[NSMutableDictionary dictionaryWithObject:_appId forKey:@"app_id"] andHttpMethod:@"DELETE" andDelegate:self];
-//		[postId release];
-//}
-
-/*
- - (void) handleComment: (NSString *) comment InPost: (NSString *) postId {
- [delegate retain];
- if (![face isSessionValid]) {
- [comment retain];
- [postId retain];
- if (pendingActionParams != nil) {
- [pendingActionParams release];
- pendingActionParams = nil;
- }
- pendingAction = @selector(handleComment:InPost:);
- 
- pendingActionParams = [[NSMutableDictionary alloc] init];
- [pendingActionParams setObject:comment forKey:@"comment"];
- [pendingActionParams setObject:postId forKey:@"postId"];
- [comment release];
- [postId release];
- 
- [self handleLogin];
- }
- else {
- [comment retain];
- [postId retain];
- [face requestWithGraphPath:[NSString stringWithFormat:@"%@/comments", postId] andParams:[NSMutableDictionary dictionaryWithObjects:[NSArray arrayWithObjects:appId, comment, nil] forKeys:[NSArray arrayWithObjects:@"app_id", @"message", nil]] andHttpMethod:@"POST" andDelegate:self];
- [comment release];
- [postId release];
- }
- }
- */
-
-//- (void) getNumLikesFromPage: (NSString *)pageId {
-//	NSLog(@"pageId: %@", pageId);
-//	
-//	NSMutableDictionary *pars = [[NSMutableDictionary alloc] init];
-//	
-//	[pars setObject:_appId forKey:@"app_id"];
-//	
-//	[_facebook requestWithGraphPath:[NSString stringWithFormat:@"%@?identifier=likes", pageId] andParams:pars andHttpMethod:@"GET" andDelegate:self];
-//	[pars release];
-//	
-//}
-
-
-//	else if ([url rangeOfString:@"identifier=likes"].length > 0.0) {
-//		//NSLog(@"likes: %@", result);
-//		if ([_delegate respondsToSelector:@selector(socialFacebook:DidReceiveNumberOfLikes:)]) {
-//			[_delegate socialFacebook:self DidReceiveNumberOfLikes:[NSString stringWithFormat:@"%@", [result objectForKey:@"likes"]]];
-//		}
-//	}
-//	else if ([url rangeOfString:@"identifier=pagelike"].length > 0.0) {
-//		//NSLog(@"result: %@", result);
-//		if ([_delegate respondsToSelector:@selector(socialFacebookDidLike:)]) {
-//			[_delegate socialFacebookDidLike:self];
-//		}
-//	}
-
-
 #pragma mark - FBSessionDelegate methods
 /**
  * Called when the user successfully logged in.
@@ -884,13 +929,7 @@ static SFSocialFacebook *_instance;
 - (void)fbDidLogin
 {
     SFDLog(@"User logged in");
-    
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:[_facebook accessToken] forKey:@"FBAccessTokenKey"];
-    [defaults setObject:[_facebook expirationDate] forKey:@"FBExpirationDateKey"];
-    [defaults synchronize];
-    
-    SFDLog(@"Access token info saved");
+    [self saveUserInfo];
     
     if (_loginBlock) {
         _loginBlock();
@@ -918,6 +957,20 @@ static SFSocialFacebook *_instance;
         _notLoginBlock(cancelled);
         [_notLoginBlock release], _notLoginBlock = nil;
     }
+}
+
+/**
+ * Called after the access token was extended. If your application has any
+ * references to the previous access token (for example, if your application
+ * stores the previous access token in persistent storage), your application
+ * should overwrite the old access token with the new one in this method.
+ * See extendAccessToken for more details.
+ */
+- (void)fbDidExtendToken:(NSString*)accessToken expiresAt:(NSDate*)expiresAt
+{
+    SFDLog(@"Access token extended");
+    
+    [self saveUserInfo];
 }
 
 /**
@@ -1042,10 +1095,18 @@ static SFSocialFacebook *_instance;
 - (void) dealloc
 {
 	[_facebook release];
+    [_permissions release];
 	[_appId release];
     [_appSecret release];
-    [_permissions release];
     [_appAccessToken release];
+    
+    [_loginBlock release];
+    [_notLoginBlock release];
+    [_logoutBlock release];
+    
+    [_dialogSuccessBlock release];
+    [_dialogFailureBlock release];
+    [_dialogCancelBlock release];
     
     [_dateFormatter release];
     [_facebookTimeZone release];

@@ -11,6 +11,7 @@
 typedef enum {
     ObjectTypeUser, 
     ObjectTypeEvent, 
+    ObjectTypeComment, 
 } ObjectType;
 
 typedef enum {

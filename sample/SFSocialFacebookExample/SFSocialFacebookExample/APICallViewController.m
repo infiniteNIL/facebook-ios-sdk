@@ -16,6 +16,8 @@
 @interface APICallViewController (Private)
 
 - (void)showAlertViewWithTitle:(NSString *)title message:(NSString *)message;
+- (void)shingleConfiguration;
+
 - (void)login;
 - (void)logout;
 - (void)uninstallApp;
@@ -27,7 +29,9 @@
 - (void)attendEvent;
 - (void)inviteFriends;
 - (void)listInvitedUsers:(NSNumber *)rsvpStatus;
-- (void)shingleConfiguration;
+- (void)listPostComments;
+- (void)listUsersWhoLikedPost;
+
 
 @end
 
@@ -35,7 +39,7 @@
 
 - (id)initWithMenu:(NSString *)menu
 {
-    self = [super init];
+    [self init];
     if (self) {
         _menuOptions = [[[Menus sharedInstance] performSelector:NSSelectorFromString(menu)] retain];
         self.navigationItem.title = [menu capitalizedString];
@@ -43,11 +47,20 @@
     return self;
 }
 
+- (id)initWithPostId:(NSString *)postId
+{
+    [self initWithMenu:@"post"];
+    if (self) {
+        _objectId = [postId copy];
+    }
+    return self;
+}
+
 - (id)initWithEventId:(NSString *)eventId
 {
-    self = [self initWithMenu:@"event"];
+    [self initWithMenu:@"event"];
     if (self) {
-        _eventId = [eventId copy];
+        _objectId = [eventId copy];
     }
     return self;
 }
@@ -58,7 +71,7 @@
     
     [_tableView release];
     [_menuOptions release];
-    [_eventId release];
+    [_objectId release];
     
     [_urlRequest release];
     [_facebookRequest release];
@@ -168,6 +181,29 @@
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:title message:message delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
     [alert show];
     [alert release];
+}
+
+#pragma mark - Shingle Call
+
+- (void)shingleConfiguration
+{
+    if (_urlRequest) {
+        [_urlRequest cancel];
+        [_urlRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _urlRequest = [[[SFSocialFacebook sharedInstance] shingleConfigurationWithUrl:@"http://icardinal-develop.heroku.com/" andArea:110 success:^(NSString *profile, BOOL needsLogin) {
+        [self showAlertViewWithTitle:@"Shingle Configuration" message:[NSString stringWithFormat:@"profileId: %@\nneedsLogin: %@", profile, (needsLogin? @"YES" : @"NO")]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"Shingle configuration request was cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
 }
 
 #pragma mark - API Calls
@@ -342,7 +378,7 @@
     
     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
     
-    _facebookRequest = [[[SFSocialFacebook sharedInstance] eventWithId:_eventId needsLogin:YES success:^(SFEvent *event) {
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] eventWithId:_objectId needsLogin:YES success:^(SFEvent *event) {
         [self showAlertViewWithTitle:@"Event" message:[event description]];
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } failureBlock:^(NSError *error) {
@@ -363,7 +399,7 @@
     
     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
     
-    _facebookRequest = [[[SFSocialFacebook sharedInstance] attendEvent:_eventId success:^{
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] attendEvent:_objectId success:^{
         [self showAlertViewWithTitle:@"Attend event" message:@"Success"];
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } failure:^(NSError *error) {
@@ -392,7 +428,7 @@
             
             if ([selectedIds count] > 0) {
             
-                _facebookRequest = [[socialFacebook inviteUsers:selectedIds toEvent:_eventId success:^{
+                _facebookRequest = [[socialFacebook inviteUsers:selectedIds toEvent:_objectId success:^{
                     [self showAlertViewWithTitle:@"Success" message:@"Users invited successfully"];
                 } failure:^(NSError *error) {
                     [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
@@ -443,9 +479,9 @@
     
     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
     
-    _facebookRequest = [[[SFSocialFacebook sharedInstance] invitedUsersForEvent:_eventId rsvpStatus:[rsvpStatus intValue] pageSize:0 success:^(NSArray *objects, NSString *nextPageUrl) {
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] invitedUsersForEvent:_objectId rsvpStatus:[rsvpStatus intValue] pageSize:0 success:^(NSArray *users, NSString *nextPageUrl) {
         
-        UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:objects type:ObjectTypeUser pickerType:ObjectPickerTypeNone completion:NULL];
+        UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:users type:ObjectTypeUser pickerType:ObjectPickerTypeNone completion:NULL];
         [self.navigationController pushViewController:ctrl animated:YES];
         [ctrl release];
         
@@ -460,25 +496,57 @@
     }] retain];
 }
 
-- (void)shingleConfiguration
+- (void)listPostComments
 {
-    if (_urlRequest) {
-        [_urlRequest cancel];
-        [_urlRequest release];
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
     }
     
     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
     
-    _urlRequest = [[[SFSocialFacebook sharedInstance] shingleConfigurationWithUrl:@"http://icardinal-develop.heroku.com/" andArea:110 success:^(NSString *profile, BOOL needsLogin) {
-        [self showAlertViewWithTitle:@"Shingle Configuration" message:[NSString stringWithFormat:@"profileId: %@\nneedsLogin: %@", profile, (needsLogin? @"YES" : @"NO")]];
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] commentsFromPost:_objectId pageSize:0 needsLogin:NO success:^(NSArray *comments, NSString *nextPageUrl) {
+        
+        UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:comments type:ObjectTypeComment pickerType:ObjectPickerTypeNone completion:NULL];
+        [self.navigationController pushViewController:ctrl animated:YES];
+        [ctrl release];
+        
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+        
     } failure:^(NSError *error) {
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } cancel:^{
-        [self showAlertViewWithTitle:nil message:@"Shingle configuration request was cancelled"];
+        [self showAlertViewWithTitle:nil message:@"Post comments request was cancelled"];
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     }] retain];
 }
+
+- (void)listUsersWhoLikedPost
+{
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] usersWhoLikedPost:_objectId pageSize:0 needsLogin:NO success:^(NSArray *users, NSString *nextPageUrl) {
+        
+        UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:users type:ObjectTypeUser pickerType:ObjectPickerTypeNone completion:NULL];
+        [self.navigationController pushViewController:ctrl animated:YES];
+        [ctrl release];
+        
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+        
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"Post comments request was cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
+}
+
 
 @end
