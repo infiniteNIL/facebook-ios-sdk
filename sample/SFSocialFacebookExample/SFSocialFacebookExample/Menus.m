@@ -17,6 +17,8 @@
 - (NSArray *)events;
 - (NSArray *)event;
 - (NSArray *)post;
+- (NSArray *)comment;
+
 
 @end
 
@@ -242,15 +244,46 @@ static Menus *_instance;
                                  @"listUsersWhoLikedPost", @"method",
                                  nil];
     
+    NSDictionary *menuOption2 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Comment", @"title", 
+                                 @"commentPost", @"method",
+                                 nil];
+    
+    NSDictionary *menuOption3 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Like", @"title", 
+                                 @"likeObject", @"method",
+                                 nil];
+    
     NSArray *menu = [NSArray arrayWithObjects:
                      menuOption0, 
                      menuOption1, 
+                     menuOption2, 
+                     menuOption3, 
                      nil];
     
     [menuOption0 release];
     [menuOption1 release];
+    [menuOption2 release];
+    [menuOption3 release];
     
     return menu;
 }
+
+- (NSArray *)comment
+{
+    NSDictionary *menuOption0 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Like", @"title", 
+                                 @"likeObject", @"method",
+                                 nil];
+    
+    NSArray *menu = [NSArray arrayWithObjects:
+                     menuOption0, 
+                     nil];
+    
+    [menuOption0 release];
+    
+    return menu;
+}
+
 
 @end

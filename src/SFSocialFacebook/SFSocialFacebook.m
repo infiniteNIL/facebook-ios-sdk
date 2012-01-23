@@ -660,6 +660,33 @@ static SFSocialFacebook *_instance;
     return [self usersWhoLikedPostWithGraphPath:nextPageUrl needsLogin:NO success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
+- (SFFacebookRequest *)commentPost:(NSString *)postId withMessage:(NSString *)message success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    SFFacebookRequest *request = [self facebookRequestWithGraphPath:[NSString stringWithFormat:@"%@/comments", postId] params:[NSMutableDictionary dictionaryWithObject:message forKey:@"message"] httpMethod:@"POST" needsLogin:YES success:^(id result) {
+        
+        if (successBlock) {
+            successBlock([result objectForKey:@"id"]);
+        }
+        
+    } failure:failureBlock cancel:cancelBlock];
+    
+    return request;
+}
+
+- (SFFacebookRequest *)likeObject:(NSString *)objectId success:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    SFFacebookRequest *request = [self facebookRequestWithGraphPath:[NSString stringWithFormat:@"%@/likes", objectId] params:[NSMutableDictionary dictionary] httpMethod:@"POST" needsLogin:YES success:^(id result) {
+        
+        if (successBlock) {
+            successBlock();
+        }
+        
+    } failure:failureBlock cancel:cancelBlock];
+    
+    return request;
+}
+
+
 #pragma mark - Private
 
 - (SFFacebookRequest *)facebookRequestWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(void (^)(id))successBlock failure:(void (^)(NSError *))failureBlock cancel:(void (^)())cancelBlock

@@ -96,4 +96,9 @@ typedef enum {
 - (SFFacebookRequest *)usersWhoLikedPost:(NSString *)postId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 - (SFFacebookRequest *)usersWhoLikedPostNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
+/** requires publish_stream permission **/
+- (SFFacebookRequest *)commentPost:(NSString *)postId withMessage:(NSString *)message success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (SFFacebookRequest *)likeObject:(NSString *)objectId success:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+
+
 @end

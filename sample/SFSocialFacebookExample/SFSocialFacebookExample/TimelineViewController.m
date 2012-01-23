@@ -23,6 +23,8 @@
     self = [super init];
     if (self) {
         _posts = [[NSMutableArray alloc] init];
+        _profileId = @"me";
+        _needsLogin = YES;
     }
     return self;
 }
@@ -31,11 +33,12 @@
 {
     [_facebookRequest cancel];
     
-    [_facebookRequest release];
     [_posts release];
     [_nextPageURL release];
     [_tableView release];
     [_nextPageButton release];
+    [_facebookRequest release];
+    [_profileId release];
     
     [super dealloc];
 }
@@ -48,7 +51,7 @@
     
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
-    self.navigationItem.title = @"stanfordfootball";
+    self.navigationItem.title = _profileId;
     UIBarButtonItem *refreshButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(refreshButtonClicked:)];
     self.navigationItem.rightBarButtonItem = refreshButton;
     [refreshButton release];
@@ -108,9 +111,9 @@
         [_facebookRequest release];
     }
     
-    _facebookRequest = [[[SFSocialFacebook sharedInstance] profileFeed:@"stanfordfootball" 
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] profileFeed:_profileId 
                                                                   pageSize:5 
-                                                                needsLogin:NO
+                                                                needsLogin:_needsLogin
                                                                    success:^(NSArray *posts, NSString *nextPageUrl) {
                                                                        [_posts addObjectsFromArray:posts];
                                                                        [_tableView reloadData];
@@ -175,7 +178,7 @@
 {
     SFSimplePost *post = [_posts objectAtIndex:indexPath.row];
     
-    UIViewController *ctrl = [[APICallViewController alloc] initWithPostId:post.objectId];
+    UIViewController *ctrl = [[APICallViewController alloc] initWithMenu:@"post" andObjectId:post.objectId];
     [self.navigationController pushViewController:ctrl animated:YES];
     [ctrl release];
 }

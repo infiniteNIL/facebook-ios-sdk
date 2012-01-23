@@ -18,6 +18,8 @@
     UITableView *_tableView;
     UIBarButtonItem *_nextPageButton;
     SFFacebookRequest *_facebookRequest;
+    NSString *_profileId;
+    BOOL _needsLogin;
 }
 
 @end

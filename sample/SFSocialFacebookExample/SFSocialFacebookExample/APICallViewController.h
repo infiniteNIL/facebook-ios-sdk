@@ -21,7 +21,6 @@
 }
 
 - (id)initWithMenu:(NSString *)menu;
-- (id)initWithEventId:(NSString *)eventId;
-- (id)initWithPostId:(NSString *)postId;
+- (id)initWithMenu:(NSString *)menu andObjectId:(NSString *)objectId;
 
 @end

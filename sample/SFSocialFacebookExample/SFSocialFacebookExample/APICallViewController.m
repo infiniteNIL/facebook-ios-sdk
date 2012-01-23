@@ -31,6 +31,8 @@
 - (void)listInvitedUsers:(NSNumber *)rsvpStatus;
 - (void)listPostComments;
 - (void)listUsersWhoLikedPost;
+- (void)commentPost;
+- (void)likeObject;
 
 
 @end
@@ -47,20 +49,11 @@
     return self;
 }
 
-- (id)initWithPostId:(NSString *)postId
+- (id)initWithMenu:(NSString *)menu andObjectId:(NSString *)objectId
 {
-    [self initWithMenu:@"post"];
+    [self initWithMenu:menu];
     if (self) {
-        _objectId = [postId copy];
-    }
-    return self;
-}
-
-- (id)initWithEventId:(NSString *)eventId
-{
-    [self initWithMenu:@"event"];
-    if (self) {
-        _objectId = [eventId copy];
+        _objectId = [objectId copy];
     }
     return self;
 }
@@ -349,7 +342,7 @@
         
         __block UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:objects type:ObjectTypeEvent pickerType:ObjectPickerTypeOne completion:^(NSArray *selectedIds) {
             
-            UIViewController *eventCtrl = [[APICallViewController alloc] initWithEventId:[selectedIds objectAtIndex:0]];
+            UIViewController *eventCtrl = [[APICallViewController alloc] initWithMenu:@"event" andObjectId:[selectedIds objectAtIndex:0]];
             [ctrl.navigationController pushViewController:eventCtrl animated:YES];
             [eventCtrl release];
             
@@ -507,7 +500,13 @@
     
     _facebookRequest = [[[SFSocialFacebook sharedInstance] commentsFromPost:_objectId pageSize:0 needsLogin:NO success:^(NSArray *comments, NSString *nextPageUrl) {
         
-        UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:comments type:ObjectTypeComment pickerType:ObjectPickerTypeNone completion:NULL];
+        __block UIViewController *ctrl = [[ObjectPickerController alloc] initWithObjects:comments type:ObjectTypeComment pickerType:ObjectPickerTypeOne completion:^(NSArray *selectedIds) {
+            
+            UIViewController *commentCtrl = [[APICallViewController alloc] initWithMenu:@"comment" andObjectId:[selectedIds objectAtIndex:0]];
+            [ctrl.navigationController pushViewController:commentCtrl animated:YES];
+            [commentCtrl release];
+            
+        }];
         [self.navigationController pushViewController:ctrl animated:YES];
         [ctrl release];
         
@@ -548,5 +547,51 @@
     }] retain];
 }
 
+- (void)commentPost
+{
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] commentPost:_objectId withMessage:@"Comment test" success:^(NSString *objectId) {
+        
+        [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Comment created with id: %@", objectId]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+        
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"Post comments request was cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
+}
+
+- (void)likeObject
+{
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] likeObject:_objectId success:^{
+        
+        [self showAlertViewWithTitle:@"Success" message:@"You liked this object"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+        
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"Post comments request was cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
+
+}
 
 @end
