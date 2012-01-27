@@ -705,7 +705,7 @@ static SFSocialFacebook *_instance;
         [params setObject:_appAccessToken forKey:@"access_token"];
     }
     
-    return [SFFacebookRequest requestWithFacebook:_facebook graphPath:graphPath params:params httpMethod:httpMethod needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
+    return [SFFacebookRequest requestWithFacebook:_facebook graphPath:[graphPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] params:params httpMethod:httpMethod needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
 - (void)saveUserInfo
@@ -795,7 +795,7 @@ static SFSocialFacebook *_instance;
 
 - (SFFacebookRequest *)profileFeedWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
-    SFFacebookRequest *request = [self facebookRequestWithGraphPath:[graphPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] needsLogin:needsLogin success:^(id result) {
+    SFFacebookRequest *request = [self facebookRequestWithGraphPath:graphPath needsLogin:needsLogin success:^(id result) {
         SFSimplePost *post = nil;
         NSMutableArray *posts = [[NSMutableArray alloc] init];
         
