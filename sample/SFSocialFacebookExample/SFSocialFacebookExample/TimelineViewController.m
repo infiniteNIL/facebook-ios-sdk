@@ -23,8 +23,8 @@
     self = [super init];
     if (self) {
         _posts = [[NSMutableArray alloc] init];
-        _profileId = @"me";
-        _needsLogin = YES;
+        _profileId = @"indigotest";
+        _needsLogin = NO;
     }
     return self;
 }

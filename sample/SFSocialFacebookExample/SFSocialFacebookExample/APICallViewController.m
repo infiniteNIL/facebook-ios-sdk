@@ -261,11 +261,11 @@
         if ([friends count] > 0) {
                         
             int randomNumber = arc4random() % [friends count];
-            SFSimpleUser *usertTo = [[SFSimpleUser alloc] init];
-            usertTo.objectId = [[friends objectAtIndex:randomNumber] objectId];
+            SFSimpleUser *userTo = [[SFSimpleUser alloc] init];
+            userTo.objectId = [[friends objectAtIndex:randomNumber] objectId];
             
             SFSimplePost *post = [[SFSimplePost alloc] init];
-            post.to = [NSArray arrayWithObject:usertTo];
+            post.to = [NSArray arrayWithObject:userTo];
             post.name = @"I'm using the I.ndigo Test App for iOS app";
             post.caption = @"I.ndigo Test App for iOS.";
             post.postDescription = @"Check out I.ndigo Test App for iOS to learn how you can make your iOS apps social using Facebook Platform.";
@@ -274,7 +274,7 @@
             post.actionName = @"I.ndigo Website";
             post.actionLink = @"http://i.ndigo.com.br";
             
-            [usertTo release];
+            [userTo release];
             
             [[SFSocialFacebook sharedInstance] publishPost:post success:^(NSString *postId) {
                 [self showAlertViewWithTitle:nil message:@"Success!"];
