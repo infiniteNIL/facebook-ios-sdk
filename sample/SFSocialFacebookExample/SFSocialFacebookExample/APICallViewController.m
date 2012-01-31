@@ -10,7 +10,6 @@
 #import "Menus.h"
 #import "SFSocialFacebook.h"
 #import "ObjectPickerController.h"
-#import "SFURLRequest.h"
 
 
 @interface APICallViewController (Private)
