@@ -12,6 +12,7 @@
 #import "SFSimpleUser.h"
 #import "SFEvent.h"
 #import "SFFacebookRequest.h"
+#import "SFSimpleApplication.h"
 
 typedef void (^SFShingleBlock)(NSString *profile, BOOL needsLogin);
 typedef void (^SFBasicBlock)(void);
@@ -32,7 +33,7 @@ typedef enum {
     
     Facebook            *_facebook;
     NSArray             *_permissions;
-    NSString            *_appId;
+    SFSimpleApplication *_app;
     NSString            *_appSecret;
     NSString            *_appAccessToken;
     
@@ -48,6 +49,8 @@ typedef enum {
     NSDateFormatter     *_dateFormatter;
     NSTimeZone          *_facebookTimeZone;
     NSTimeZone          *_localTimeZone;
+    
+    SFFacebookRequest   *_fbRequest;
 }
 
 + (SFSocialFacebook *)sharedInstance;
@@ -63,6 +66,8 @@ typedef enum {
 - (void)loginWithSuccess:(SFBasicBlock)successBlock failure:(SFDidNotLoginBlock)failureBlock;
 - (void)logoutWithSuccess:(SFBasicBlock)successsBlock;
 - (SFFacebookRequest *)uninstallApp:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+
+- (SFFacebookRequest *)loadAppInfoWithSuccess:(void (^)(SFSimpleApplication *app))successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 - (SFFacebookRequest *)profileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 - (SFFacebookRequest *)profileFeedNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
@@ -97,7 +102,7 @@ typedef enum {
 - (SFFacebookRequest *)usersWhoLikedPostNextPage:(NSString *)nextPageUrl success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 /** requires publish_stream permission **/
-- (SFFacebookRequest *)commentPost:(NSString *)postId withMessage:(NSString *)message success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
+- (void)commentPost:(NSString *)postId success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 - (SFFacebookRequest *)likeObject:(NSString *)objectId success:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
 

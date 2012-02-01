@@ -550,23 +550,16 @@
 {
     if (_facebookRequest) {
         [_facebookRequest cancel];
-        [_facebookRequest release];
+        [_facebookRequest release], _facebookRequest = nil;
     }
     
-    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
-    
-    _facebookRequest = [[[SFSocialFacebook sharedInstance] commentPost:_objectId withMessage:@"Comment test" success:^(NSString *objectId) {
-        
+    [[SFSocialFacebook sharedInstance] commentPost:_objectId success:^(NSString *objectId) {
         [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Comment created with id: %@", objectId]];
-        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
-        
     } failure:^(NSError *error) {
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
-        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } cancel:^{
-        [self showAlertViewWithTitle:nil message:@"Post comments request was cancelled"];
-        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
-    }] retain];
+        [self showAlertViewWithTitle:nil message:@"User cancelled"];
+    }];
 }
 
 - (void)likeObject

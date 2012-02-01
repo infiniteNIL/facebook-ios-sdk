@@ -11,6 +11,7 @@
 #import "SBJSON.h"
 #import "SFURLRequest.h"
 #import "SFComment.h"
+#import "SFTextDialog.h"
 
 /*
  
@@ -38,9 +39,10 @@ NSString *const kSFExpirationDateKey = @"FBExpirationDateKey";
 - (SFFacebookRequest *)commentsFromPostWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 - (SFFacebookRequest *)usersWhoLikedPostWithGraphPath:(NSString *)graphPath needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock;
 
-- (void)saveUserInfo;
-- (void)loadUserInfo;
-- (void)clearUserInfo;
+- (void)saveLoginInfo;
+- (void)loadLoginInfo;
+- (void)clearLoginInfo;
+
 - (NSDictionary *)parseURLParams:(NSString *)query;
 - (void)releaseDialogBlocks;
 - (NSString *)nextPageUrl:(NSDictionary *)paging;
@@ -195,9 +197,11 @@ static SFSocialFacebook *_instance;
                 // Everything is OK
                 _facebook = [[Facebook alloc] initWithAppId:appId urlSchemeSuffix:urlSchemeSuffix andDelegate:self];
                 
-                [self loadUserInfo];
+                [self loadLoginInfo];
                 
-                _appId = [appId copy];
+                _app = [[SFSimpleApplication alloc] init];
+                _app.objectId = appId;
+                
                 _appSecret = [appSecret copy];
 #ifdef DEBUG
             }
@@ -229,7 +233,7 @@ static SFSocialFacebook *_instance;
 
 - (void)getAppAccessTokenWithSuccess:(void (^)(NSString *))successBlock failure:(SFFailureBlock)failureBlock
 {   
-    [SFURLRequest requestWithURL:[NSString stringWithFormat:@"https://graph.facebook.com/oauth/access_token?client_id=%@&client_secret=%@&grant_type=client_credentials", _appId, _appSecret] 
+    [SFURLRequest requestWithURL:[NSString stringWithFormat:@"https://graph.facebook.com/oauth/access_token?client_id=%@&client_secret=%@&grant_type=client_credentials", _app.objectId, _appSecret] 
                          success:^(NSData *receivedData) {
                              NSString *response = [[NSString alloc] initWithData:receivedData encoding:NSUTF8StringEncoding];
                              NSArray *components = [response componentsSeparatedByString:@"="];
@@ -291,6 +295,32 @@ static SFSocialFacebook *_instance;
     
     return request;
 }
+
+- (SFFacebookRequest *)loadAppInfoWithSuccess:(void (^)(SFSimpleApplication *))successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    if (_app.name) {
+        if (successBlock) {
+            successBlock(_app);
+        }
+        
+        return nil;
+    } else {
+    
+        SFFacebookRequest *request = [self facebookRequestWithGraphPath:[NSString stringWithFormat:@"%@?fields=name,icon_url", _app.objectId] needsLogin:NO success:^(id result) {
+            
+            _app.name = [result objectForKey:@"name"];
+            _app.iconUrl = [result objectForKey:@"icon_url"];
+            
+            if (successBlock) {
+                successBlock(_app);
+            }
+            
+        } failure:failureBlock cancel:cancelBlock];
+        
+        return request;
+    }
+}
+
 
 - (SFFacebookRequest *)profileFeed:(NSString *)profileId pageSize:(NSUInteger)pageSize needsLogin:(BOOL)needsLogin success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
@@ -660,17 +690,71 @@ static SFSocialFacebook *_instance;
     return [self usersWhoLikedPostWithGraphPath:nextPageUrl needsLogin:NO success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
-- (SFFacebookRequest *)commentPost:(NSString *)postId withMessage:(NSString *)message success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+- (void)commentPost:(NSString *)postId success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
-    SFFacebookRequest *request = [self facebookRequestWithGraphPath:[NSString stringWithFormat:@"%@/comments", postId] params:[NSMutableDictionary dictionaryWithObject:message forKey:@"message"] httpMethod:@"POST" needsLogin:YES success:^(id result) {
+    if (![_facebook isSessionValid]) {
         
-        if (successBlock) {
-            successBlock([result objectForKey:@"id"]);
-        }
+        [self loginWithSuccess:^{
+            [self commentPost:postId success:successBlock failure:failureBlock cancel:cancelBlock];
+        } failure:^(BOOL cancelled) {
+            if (cancelled) {
+                if (cancelBlock) {
+                    cancelBlock();
+                }
+            } else {
+                if (failureBlock) {
+                    failureBlock(SFError(@"Could not login"));
+                }
+            }
+        }];
         
-    } failure:failureBlock cancel:cancelBlock];
+    } else {
     
-    return request;
+        __block SFTextDialog *dialog = [[SFTextDialog alloc] init];
+        
+        __block SFSocialFacebook *blockSelf = self;
+        
+        dialog.successBlock = ^(NSString *message) {
+            
+            if (_fbRequest == nil) {
+                
+                _fbRequest = [[blockSelf facebookRequestWithGraphPath:[NSString stringWithFormat:@"%@/comments", postId] params:[NSMutableDictionary dictionaryWithObject:message forKey:@"message"] httpMethod:@"POST" needsLogin:YES success:^(id result) {
+                    
+                    if (successBlock) {
+                        successBlock([result objectForKey:@"id"]);
+                    }
+                    
+                    [_fbRequest release], _fbRequest = nil;
+                    [dialog dismiss:YES];
+                } failure:^(NSError *error) {
+                    
+                    if (failureBlock) {
+                        failureBlock(error);
+                    }
+                    
+                    [_fbRequest release], _fbRequest = nil;
+                    [dialog dismiss:YES];
+                } cancel:NULL] retain];
+            }
+        };
+        
+        dialog.cancelBlock = ^{
+            
+            if (_fbRequest) {
+                [_fbRequest cancel];
+                [_fbRequest release], _fbRequest = nil;
+            }
+            
+            if (cancelBlock) {
+                cancelBlock();
+            }
+            
+            [dialog dismiss:YES];
+        };
+        
+        [dialog show];
+        [dialog release];
+    }
 }
 
 - (SFFacebookRequest *)likeObject:(NSString *)objectId success:(SFBasicBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
@@ -708,7 +792,7 @@ static SFSocialFacebook *_instance;
     return [SFFacebookRequest requestWithFacebook:_facebook graphPath:[graphPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding] params:params httpMethod:httpMethod needsLogin:needsLogin success:successBlock failure:failureBlock cancel:cancelBlock];
 }
 
-- (void)saveUserInfo
+- (void)saveLoginInfo
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:[_facebook accessToken] forKey:kSFAccessTokenKey];
@@ -718,7 +802,7 @@ static SFSocialFacebook *_instance;
     SFDLog(@"Access token info saved");
 }
 
-- (void)loadUserInfo
+- (void)loadLoginInfo
 {
     // Retrieve authorization information
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -728,7 +812,7 @@ static SFSocialFacebook *_instance;
     }
 }
 
-- (void)clearUserInfo
+- (void)clearLoginInfo
 {
     // Remove saved authorization information if it exists
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -956,7 +1040,7 @@ static SFSocialFacebook *_instance;
 - (void)fbDidLogin
 {
     SFDLog(@"User logged in");
-    [self saveUserInfo];
+    [self saveLoginInfo];
     
     if (_loginBlock) {
         _loginBlock();
@@ -997,7 +1081,7 @@ static SFSocialFacebook *_instance;
 {
     SFDLog(@"Access token extended");
     
-    [self saveUserInfo];
+    [self saveLoginInfo];
 }
 
 /**
@@ -1007,7 +1091,7 @@ static SFSocialFacebook *_instance;
 {
 	SFDLog(@"Logout");
     
-    [self clearUserInfo];
+    [self clearLoginInfo];
     
     if (_logoutBlock) {
         _logoutBlock();
@@ -1026,7 +1110,7 @@ static SFSocialFacebook *_instance;
 {
     SFDLog(@"Session invalidated");
     
-    [self clearUserInfo];
+    [self clearLoginInfo];
 }
 
 #pragma mark - FBDialogDelegate
@@ -1123,7 +1207,7 @@ static SFSocialFacebook *_instance;
 {
 	[_facebook release];
     [_permissions release];
-	[_appId release];
+    [_app release];
     [_appSecret release];
     [_appAccessToken release];
     
@@ -1138,6 +1222,8 @@ static SFSocialFacebook *_instance;
     [_dateFormatter release];
     [_facebookTimeZone release];
     [_localTimeZone release];
+    
+    [_fbRequest release];
     
 	SFDLog(@"SFSocialFacebook deallocated");
     
