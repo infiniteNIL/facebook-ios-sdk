@@ -46,6 +46,7 @@ NSString *const kSFExpirationDateKey = @"FBExpirationDateKey";
 - (NSDictionary *)parseURLParams:(NSString *)query;
 - (void)releaseDialogBlocks;
 - (NSString *)nextPageUrl:(NSDictionary *)paging;
+- (NSMutableDictionary *)paramsForPost:(SFSimplePost *)post;
 
 - (NSDate *)dateWithFacebookUnixTimestamp:(NSTimeInterval)unixTimestamp;
 - (NSTimeInterval)facebookUnixTimestampFromDate:(NSDate *)date;
@@ -357,40 +358,7 @@ static SFSocialFacebook *_instance;
         _dialogFailureBlock = [failureBlock copy];
         _dialogCancelBlock = [cancelBlock copy];
         
-        NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
-        
-        if (post) {
-            // The action links to be shown with the post in the feed
-            NSString *actionName = [post actionName];
-            NSString *actionLink = [post actionLink];
-            
-            if (actionName && actionLink) {
-                [params setObject:[NSString stringWithFormat:@"[{name:\"%@\",link:\"%@\"}]", actionName, actionLink] forKey:@"actions"];
-            }
-            
-            // Dialog parameters
-            NSString *value = nil;
-            NSArray *to = [post to];
-            if ([to count] > 0) {
-                value = [((SFSimpleUser *)[to objectAtIndex:0]) objectId];
-                if (value) { [params setObject:value forKey:@"to"]; }
-            }
-            value = [post name];
-            if (value) { [params setObject:value forKey:@"name"]; }
-            value = [post caption];
-            if (value) { [params setObject:value forKey:@"caption"]; }
-            value = [post postDescription];
-            if (value) { [params setObject:value forKey:@"description"]; }
-            value = [post link];
-            if (value) { [params setObject:value forKey:@"link"]; }
-            value = [post picture];
-            if (value) { [params setObject:value forKey:@"picture"]; }
-            value = [post source];
-            if (value) { [params setObject:value forKey:@"source"]; }
-        }
-        
-        [_facebook dialog:@"feed" andParams:params andDelegate:self];
-        [params release];
+        [_facebook dialog:@"feed" andParams:[self paramsForPost:post] andDelegate:self];
     }
 }
 
@@ -770,6 +738,79 @@ static SFSocialFacebook *_instance;
     return request;
 }
 
+- (void)publishPost:(SFSimplePost *)post onPage:(NSString *)pageId success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    if (![_facebook isSessionValid]) {
+        
+        [self loginWithSuccess:^{
+            [self publishPost:post onPage:pageId success:successBlock failure:failureBlock cancel:cancelBlock];
+        } failure:^(BOOL cancelled) {
+            if (cancelled) {
+                if (cancelBlock) {
+                    cancelBlock();
+                }
+            } else {
+                if (failureBlock) {
+                    failureBlock(SFError(@"Could not login"));
+                }
+            }
+        }];
+        
+    } else {
+        
+        __block SFTextDialog *dialog = [[SFTextDialog alloc] init];
+        dialog.title = @"Post to Wall";
+        dialog.placeHolder = @"Say something about this...";
+        
+        __block SFSocialFacebook *blockSelf = self;
+        
+        dialog.successBlock = ^(NSString *message) {
+            
+            if (_fbRequest == nil) {
+                
+                NSMutableDictionary *params = [blockSelf paramsForPost:post];
+                
+                [params setObject:message forKey:@"message"];
+                
+                _fbRequest = [[blockSelf facebookRequestWithGraphPath:[NSString stringWithFormat:@"%@/feed", pageId] params:params httpMethod:@"POST" needsLogin:YES success:^(id result) {
+                    
+                    if (successBlock) {
+                        successBlock([result objectForKey:@"id"]);
+                    }
+                    
+                    [_fbRequest release], _fbRequest = nil;
+                    [dialog dismiss:YES];
+                } failure:^(NSError *error) {
+                    
+                    if (failureBlock) {
+                        failureBlock(error);
+                    }
+                    
+                    [_fbRequest release], _fbRequest = nil;
+                    [dialog dismiss:YES];
+                } cancel:NULL] retain];
+            }
+        };
+        
+        dialog.cancelBlock = ^{
+            
+            if (_fbRequest) {
+                [_fbRequest cancel];
+                [_fbRequest release], _fbRequest = nil;
+            }
+            
+            if (cancelBlock) {
+                cancelBlock();
+            }
+            
+            [dialog dismiss:YES];
+        };
+        
+        [dialog show];
+        [dialog release];
+    }
+}
+
 
 #pragma mark - Private
 
@@ -855,6 +896,43 @@ static SFSocialFacebook *_instance;
         nextPageUrl = [nextPageUrl substringFromIndex:pos];
     }
     return nextPageUrl;
+}
+
+- (NSMutableDictionary *)paramsForPost:(SFSimplePost *)post
+{
+    NSMutableDictionary *params = [NSMutableDictionary dictionary];
+    
+    if (post) {
+        // The action links to be shown with the post in the feed
+        NSString *actionName = [post actionName];
+        NSString *actionLink = [post actionLink];
+        
+        if (actionName && actionLink) {
+            [params setObject:[NSString stringWithFormat:@"[{name:\"%@\",link:\"%@\"}]", actionName, actionLink] forKey:@"actions"];
+        }
+        
+        // Dialog parameters
+        NSString *value = nil;
+        NSArray *to = [post to];
+        if ([to count] > 0) {
+            value = [((SFSimpleUser *)[to objectAtIndex:0]) objectId];
+            if (value) { [params setObject:value forKey:@"to"]; }
+        }
+        value = [post name];
+        if (value) { [params setObject:value forKey:@"name"]; }
+        value = [post caption];
+        if (value) { [params setObject:value forKey:@"caption"]; }
+        value = [post postDescription];
+        if (value) { [params setObject:value forKey:@"description"]; }
+        value = [post link];
+        if (value) { [params setObject:value forKey:@"link"]; }
+        value = [post picture];
+        if (value) { [params setObject:value forKey:@"picture"]; }
+        value = [post source];
+        if (value) { [params setObject:value forKey:@"source"]; }
+    }
+    
+    return params;
 }
 
 - (NSDate *)dateWithFacebookUnixTimestamp:(NSTimeInterval)unixTimestamp

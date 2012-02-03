@@ -14,6 +14,8 @@
 
 @interface APICallViewController (Private)
 
+- (SFSimplePost *)postExample;
+
 - (void)showAlertViewWithTitle:(NSString *)title message:(NSString *)message;
 - (void)shingleConfiguration;
 
@@ -32,6 +34,7 @@
 - (void)listUsersWhoLikedPost;
 - (void)commentPost;
 - (void)likeObject;
+- (void)publishToPage;
 
 
 @end
@@ -168,6 +171,20 @@
 
 #pragma mark - Private
 
+- (SFSimplePost *)postExample
+{
+    SFSimplePost *post = [[SFSimplePost alloc] init];
+    post.name = @"I'm using the I.ndigo Test App for iOS app";
+    post.caption = @"I.ndigo Test App for iOS.";
+    post.postDescription = @"Check out I.ndigo Test App for iOS to learn how you can make your iOS apps social using Facebook Platform.";
+    post.link = @"http://www.i.ndigo.com.br/";
+    post.picture = @"https://fbcdn-photos-a.akamaihd.net/photos-ak-snc1/v85006/197/198801296855729/app_1_198801296855729_3543.gif";
+    post.actionName = @"I.ndigo Website";
+    post.actionLink = @"http://i.ndigo.com.br";
+    
+    return [post autorelease];
+}
+
 - (void)showAlertViewWithTitle:(NSString *)title message:(NSString *)message
 {
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:title message:message delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
@@ -234,23 +251,13 @@
 
 - (void)publish
 {
-    SFSimplePost *post = [[SFSimplePost alloc] init];
-    post.name = @"I'm using the I.ndigo Test App for iOS app";
-    post.caption = @"I.ndigo Test App for iOS.";
-    post.postDescription = @"Check out I.ndigo Test App for iOS to learn how you can make your iOS apps social using Facebook Platform.";
-    post.link = @"http://www.i.ndigo.com.br/";
-    post.picture = @"https://fbcdn-photos-a.akamaihd.net/photos-ak-snc1/v85006/197/198801296855729/app_1_198801296855729_3543.gif";
-    post.actionName = @"I.ndigo Website";
-    post.actionLink = @"http://i.ndigo.com.br";
-    
-    [[SFSocialFacebook sharedInstance] publishPost:post success:^(NSString *postId) {
-        [self showAlertViewWithTitle:nil message:@"Success!"];
+    [[SFSocialFacebook sharedInstance] publishPost:[self postExample] success:^(NSString *postId) {
+        [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Comment created with id: %@", postId]];
     } failure:^(NSError *error) {
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
     } cancel:^{
         [self showAlertViewWithTitle:nil message:@"User cancelled"];
     }];
-    [post release];
 }
 
 - (void)publishToFriend
@@ -263,15 +270,8 @@
             SFSimpleUser *userTo = [[SFSimpleUser alloc] init];
             userTo.objectId = [[friends objectAtIndex:randomNumber] objectId];
             
-            SFSimplePost *post = [[SFSimplePost alloc] init];
+            SFSimplePost *post = [self postExample];
             post.to = [NSArray arrayWithObject:userTo];
-            post.name = @"I'm using the I.ndigo Test App for iOS app";
-            post.caption = @"I.ndigo Test App for iOS.";
-            post.postDescription = @"Check out I.ndigo Test App for iOS to learn how you can make your iOS apps social using Facebook Platform.";
-            post.link = @"http://www.i.ndigo.com.br/";
-            post.picture = @"https://fbcdn-photos-a.akamaihd.net/photos-ak-snc1/v85006/197/198801296855729/app_1_198801296855729_3543.gif";
-            post.actionName = @"I.ndigo Website";
-            post.actionLink = @"http://i.ndigo.com.br";
             
             [userTo release];
             
@@ -282,7 +282,6 @@
             } cancel:^{
                 [self showAlertViewWithTitle:nil message:@"User cancelled"];
             }];
-            [post release];
         } else {
             [self showAlertViewWithTitle:nil message:@"You do not have any friends to post to."];
         }
@@ -584,6 +583,17 @@
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     }] retain];
 
+}
+
+- (void)publishToPage
+{
+    [[SFSocialFacebook sharedInstance] publishPost:[self postExample] onPage:@"indigotest" success:^(NSString *postId) {
+        [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Post created with id: %@", postId]];
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"User cancelled"];
+    }];
 }
 
 @end

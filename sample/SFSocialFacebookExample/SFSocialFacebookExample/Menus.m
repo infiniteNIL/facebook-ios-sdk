@@ -127,14 +127,20 @@ static Menus *_instance;
                                  @"Publish to friend's wall", @"title", 
                                  @"publishToFriend", @"method",
                                  nil];
+    NSDictionary *menuOption2 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Publish to page's wall", @"title", 
+                                 @"publishToPage", @"method",
+                                 nil];
     
     NSArray *menu = [NSArray arrayWithObjects:
                      menuOption0, 
                      menuOption1, 
+                     menuOption2, 
                      nil];
     
     [menuOption0 release];
     [menuOption1 release];
+    [menuOption2 release];
     
     return menu;
 }
