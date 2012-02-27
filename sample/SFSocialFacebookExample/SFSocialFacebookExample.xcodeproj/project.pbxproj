@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5B358BDA14FBBEA100EBA676 /* FBFrictionlessRequestSettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B358BD914FBBEA100EBA676 /* FBFrictionlessRequestSettings.m */; };
 		5B4144F414C45D3B00509C93 /* ObjectPickerController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B4144F314C45D3B00509C93 /* ObjectPickerController.m */; };
 		5B4144F714C4949C00509C93 /* SFObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B4144F614C4949B00509C93 /* SFObject.m */; };
 		5B515E7314B5C75B002406D6 /* APICallViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5B515E7214B5C75B002406D6 /* APICallViewController.m */; };
@@ -47,6 +48,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		5B358BD814FBBEA100EBA676 /* FBFrictionlessRequestSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBFrictionlessRequestSettings.h; sourceTree = "<group>"; };
+		5B358BD914FBBEA100EBA676 /* FBFrictionlessRequestSettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FBFrictionlessRequestSettings.m; sourceTree = "<group>"; };
 		5B4144F214C45D3B00509C93 /* ObjectPickerController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = ObjectPickerController.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		5B4144F314C45D3B00509C93 /* ObjectPickerController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; lineEnding = 0; path = ObjectPickerController.m; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objc; };
 		5B4144F514C4949B00509C93 /* SFObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = SFObject.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -198,6 +201,8 @@
 		5B98950614B36EDE005B6B4B /* Facebook */ = {
 			isa = PBXGroup;
 			children = (
+				5B358BD814FBBEA100EBA676 /* FBFrictionlessRequestSettings.h */,
+				5B358BD914FBBEA100EBA676 /* FBFrictionlessRequestSettings.m */,
 				5B98950A14B36EDE005B6B4B /* Facebook.h */,
 				5B98950B14B36EDE005B6B4B /* Facebook.m */,
 				5B98950D14B36EDE005B6B4B /* FBConnect.h */,
@@ -379,6 +384,7 @@
 				5B524CC414CD90C400FDDBC3 /* SFComment.m in Sources */,
 				5B79C96F14D6FF6D00C3D22A /* SFTextDialog.m in Sources */,
 				5B79C98514D825F900C3D22A /* SFSimpleApplication.m in Sources */,
+				5B358BDA14FBBEA100EBA676 /* FBFrictionlessRequestSettings.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

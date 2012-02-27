@@ -14,19 +14,13 @@ sample/Hackbook/Hackbook.xcodeproj/project.xcworkspace
 src/facebook-ios-sdk.xcodeproj/*.pbxuser
 src/facebook-ios-sdk.xcodeproj/*.mode*
 src/build/
+build/
+lib/
 test/UnitTest/UnitTest.xcodeproj/*.pbxuser
 test/UnitTest/UnitTest.xcodeproj/*.mode*
 test/UnitTest/build/
 *~
 *#
-.arcconfig
-
-# xcode noise
-build/*
-*.pbxuser
-*.mode1v3
-
-# xcode 4
-xcuserdata
-
 .DS_Store
+project.xcworkspace
+xcuserdata
