@@ -24,6 +24,9 @@
 - (void)uninstallApp;
 - (void)publish;
 - (void)publishToFriend;
+- (void)publishToPage;
+- (void)publishWithoutDialog;
+- (void)publishToPageWithoutDialog;
 - (void)createEvent;
 - (void)listEvents;
 - (void)eventDetails;
@@ -34,8 +37,6 @@
 - (void)listUsersWhoLikedPost;
 - (void)commentPost;
 - (void)likeObject;
-- (void)publishToPage;
-
 
 @end
 
@@ -181,6 +182,7 @@
     post.picture = @"https://fbcdn-photos-a.akamaihd.net/photos-ak-snc1/v85006/197/198801296855729/app_1_198801296855729_3543.gif";
     post.actionName = @"I.ndigo Website";
     post.actionLink = @"http://i.ndigo.com.br";
+    post.message = @"Message created by App";
     
     return [post autorelease];
 }
@@ -244,7 +246,7 @@
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } cancel:^{
-        [self showAlertViewWithTitle:@"Uninstall App" message:@"Canceled"];
+        [self showAlertViewWithTitle:@"Uninstall App" message:@"Uninstall App request cancelled"];
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     }];
 }
@@ -291,6 +293,61 @@
     } cancel:^{
         [self showAlertViewWithTitle:nil message:@"List friends request was cancelled"];
     }];
+}
+
+- (void)publishToPage
+{
+    [[SFSocialFacebook sharedInstance] publishPost:[self postExample] onPage:@"indigotest" success:^(NSString *postId) {
+        [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Post created with id: %@", postId]];
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"User cancelled"];
+    }];
+}
+
+- (void)publishWithoutDialog
+{
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] publishPostWithoutDialog:[self postExample] success:^(NSString *postId) {
+        [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Post created with id: %@", postId]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"Publish post request cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+}
+
+- (void)publishToPageWithoutDialog
+{
+    if (_facebookRequest) {
+        [_facebookRequest cancel];
+        [_facebookRequest release];
+    }
+    
+    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
+    
+    _facebookRequest = [[[SFSocialFacebook sharedInstance] publishPostWithoutDialog:[self postExample] onPage:@"indigotest" success:^(NSString *postId) {
+        [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Post created with id: %@", postId]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } failure:^(NSError *error) {
+        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    } cancel:^{
+        [self showAlertViewWithTitle:nil message:@"Publish post to page request cancelled"];
+        [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
+    }] retain];
 }
 
 - (void)createEvent
@@ -583,17 +640,6 @@
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     }] retain];
 
-}
-
-- (void)publishToPage
-{
-    [[SFSocialFacebook sharedInstance] publishPost:[self postExample] onPage:@"indigotest" success:^(NSString *postId) {
-        [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Post created with id: %@", postId]];
-    } failure:^(NSError *error) {
-        [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
-    } cancel:^{
-        [self showAlertViewWithTitle:nil message:@"User cancelled"];
-    }];
 }
 
 @end

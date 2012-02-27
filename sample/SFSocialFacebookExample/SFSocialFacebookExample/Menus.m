@@ -127,20 +127,35 @@ static Menus *_instance;
                                  @"Publish to friend's wall", @"title", 
                                  @"publishToFriend", @"method",
                                  nil];
+    
     NSDictionary *menuOption2 = [[NSDictionary alloc] initWithObjectsAndKeys:
                                  @"Publish to page's wall", @"title", 
                                  @"publishToPage", @"method",
                                  nil];
     
+    NSDictionary *menuOption3 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Publish to your wall without Dialog", @"title", 
+                                 @"publishWithoutDialog", @"method",
+                                 nil];
+
+    NSDictionary *menuOption4 = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                 @"Publish to page's wall without Dialog", @"title", 
+                                 @"publishToPageWithoutDialog", @"method",
+                                 nil];
+
     NSArray *menu = [NSArray arrayWithObjects:
                      menuOption0, 
                      menuOption1, 
                      menuOption2, 
+                     menuOption3, 
+                     menuOption4, 
                      nil];
     
     [menuOption0 release];
     [menuOption1 release];
     [menuOption2 release];
+    [menuOption3 release];
+    [menuOption4 release];
     
     return menu;
 }

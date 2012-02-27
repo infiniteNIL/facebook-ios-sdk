@@ -362,6 +362,17 @@ static SFSocialFacebook *_instance;
     }
 }
 
+- (SFFacebookRequest *)publishPostWithoutDialog:(SFSimplePost *)post success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    SFFacebookRequest *request = [self facebookRequestWithGraphPath:@"me/feed" params:[self paramsForPost:post] httpMethod:@"POST" needsLogin:YES success:^(id result) {
+        if (successBlock) {
+            successBlock([result objectForKey:@"id"]);
+        }
+    } failure:failureBlock cancel:cancelBlock];
+    
+    return request;
+}
+
 - (SFFacebookRequest *)friendsWithPageSize:(NSUInteger)pageSize success:(SFListObjectsBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
 {
     return [self friendsNextPage:[NSString stringWithFormat:@"me/friends?limit=%d", pageSize] success:successBlock failure:failureBlock cancel:cancelBlock];
@@ -811,6 +822,16 @@ static SFSocialFacebook *_instance;
     }
 }
 
+- (SFFacebookRequest *)publishPostWithoutDialog:(SFSimplePost *)post onPage:(NSString *)pageId success:(SFCreateObjectBlock)successBlock failure:(SFFailureBlock)failureBlock cancel:(SFBasicBlock)cancelBlock
+{
+    SFFacebookRequest *request = [self facebookRequestWithGraphPath:[NSString stringWithFormat:@"%@/feed", pageId] params:[self paramsForPost:post] httpMethod:@"POST" needsLogin:YES success:^(id result) {
+        if (successBlock) {
+            successBlock([result objectForKey:@"id"]);
+        }
+    } failure:failureBlock cancel:cancelBlock];
+    
+    return request;
+}
 
 #pragma mark - Private
 
@@ -930,6 +951,8 @@ static SFSocialFacebook *_instance;
         if (value) { [params setObject:value forKey:@"picture"]; }
         value = [post source];
         if (value) { [params setObject:value forKey:@"source"]; }
+        value = [post message];
+        if (value) { [params setObject:value forKey:@"message"]; }
     }
     
     return params;
