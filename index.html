@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="SFSocialFacebook : Facebook SDK Façade for iOS" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>SFSocialFacebook</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/indigotech/facebook-ios-sdk">View on GitHub</a>
+
+          <h1 id="project_title">SFSocialFacebook</h1>
+          <h2 id="project_tagline">Facebook SDK Façade for iOS</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/indigotech/facebook-ios-sdk/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/indigotech/facebook-ios-sdk/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h3>SFSocialFacebook</h3>
+
+<p>This is a Facebook SDK Façade for iOS with Blocks. SFSocialFacebook is a fork of <a href="https://github.com/facebook/facebook-ios-sdk">Facebook SDK for iOS</a> with simpler and cleaner way to use.</p>
+
+<h3>Installation</h3>
+
+<h4>CocoaPod</h4>
+
+<pre><code>dependency SFSocialFacebook, ~&gt; '1.1.0'
+</code></pre>
+
+<h4>Non CocoaPod</h4>
+
+<p>Copy all files from <code>src/</code> except <code>.xcodeproj</code>and <code>.pch</code> files to your project.</p>
+
+<h3>Setup</h3>
+
+<p>In your project's <code>AppDelegate.m</code>:</p>
+
+<div class="highlight">
+<pre><span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="nv">application</span> <span class="nf">didFinishLaunchingWithOptions:</span><span class="p">(</span><span class="n">NSDictionary</span> <span class="o">*</span><span class="p">)</span><span class="nv">launchOptions</span>
+<span class="p">{</span>
+<span class="n">NSArray</span> <span class="o">*</span><span class="n">permissions</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSArray</span> <span class="n">alloc</span><span class="p">]</span> <span class="nl">initWithObjects:</span><span class="s">@"create_event"</span><span class="p">,</span> <span class="s">@"user_events"</span><span class="p">,</span> <span class="s">@"rsvp_event"</span><span class="p">,</span> <span class="s">@"publish_stream"</span><span class="p">,</span> <span class="nb">nil</span><span class="p">];</span>
+<span class="n">_socialFacebook</span> <span class="o">=</span> <span class="p">[</span><span class="n">SFSocialFacebook</span> <span class="nl">sharedInstanceWithAppId:</span><span class="s">@"YOUR_APP_ID"</span> <span class="nl">appSecret:</span><span class="s">@"YOUR_APP_SECRET"</span> <span class="nl">urlSchemeSuffix:</span><span class="nb">nil</span> <span class="nl">andPermissions:</span><span class="n">permissions</span><span class="p">];</span>
+<span class="p">[</span><span class="n">permissions</span> <span class="n">release</span><span class="p">];</span>
+<span class="p">...</span>
+<span class="p">}</span>
+
+<span class="c1">// Pre 4.2 support</span>
+<span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="nv">application</span> <span class="nf">handleOpenURL:</span><span class="p">(</span><span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">url</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_socialFacebook</span> <span class="nl">handleOpenURL:</span><span class="n">url</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="c1">// For 4.2+ support</span>
+<span class="k">-</span> <span class="p">(</span><span class="kt">BOOL</span><span class="p">)</span><span class="nf">application:</span><span class="p">(</span><span class="n">UIApplication</span> <span class="o">*</span><span class="p">)</span><span class="nv">application</span> <span class="nf">openURL:</span><span class="p">(</span><span class="n">NSURL</span> <span class="o">*</span><span class="p">)</span><span class="nv">url</span> <span class="nf">sourceApplication:</span><span class="p">(</span><span class="n">NSString</span> <span class="o">*</span><span class="p">)</span><span class="nv">sourceApplication</span> <span class="nf">annotation:</span><span class="p">(</span><span class="kt">id</span><span class="p">)</span><span class="nv">annotation</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_socialFacebook</span> <span class="nl">handleOpenURL:</span><span class="n">url</span><span class="p">];</span>
+<span class="p">}</span>
+</pre>
+</div>
+
+
+<h3>Sample Application</h3>
+
+<p>There is a sample XCode project using SFSocialFacebook in <code>sample/SFSocialFacebookExample/SFSocialFacebookExample.xcodeproj</code>.</p>
+
+<h3>License</h3>
+
+<p>SFSocialFacebook is licensed under the Apache License, Version 2.0 (<a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a>).</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">SFSocialFacebook maintained by <a href="https://github.com/indigotech">indigotech</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
