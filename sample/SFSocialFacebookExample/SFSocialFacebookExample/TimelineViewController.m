@@ -160,13 +160,13 @@
                                                                               UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" message:[error localizedDescription] delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
                                                                               [alert show];
                                                                               [alert release];
-                                                                              [button setEnabled:(_nextPageURL != nil)];
+                                                                              [button setEnabled:YES];
                                                                               [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
                                                                           } cancel:^{
                                                                               UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"Feed next page request was cancelled" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
                                                                               [alert show];
                                                                               [alert release];
-                                                                              [button setEnabled:(_nextPageURL != nil)];
+                                                                              [button setEnabled:YES];
                                                                               [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
                                                                           }] retain];
     [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];

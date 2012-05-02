@@ -22,7 +22,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    NSArray *permissions = [[NSArray alloc] initWithObjects:@"create_event, user_events, rsvp_event, publish_stream", nil];
+    NSArray *permissions = [[NSArray alloc] initWithObjects:@"create_event", @"user_events", @"rsvp_event", @"publish_stream", nil];
     _socialFacebook = [SFSocialFacebook sharedInstanceWithAppId:@"198801296855729" appSecret:@"abe6ebce8a657c18c748887d9d480265" urlSchemeSuffix:nil andPermissions:permissions];
     [permissions release];
     

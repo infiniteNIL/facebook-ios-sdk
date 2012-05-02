@@ -65,7 +65,7 @@ static SFSocialFacebook *_instance;
 + (SFSocialFacebook *)sharedInstance
 {
     if (_instance == nil) {
-        @throw [NSException exceptionWithName:@"SFSocialFacebook Exception" reason:@"There is no singleton instance" userInfo:nil];
+        @throw [NSException exceptionWithName:@"SFSocialFacebook Exception" reason:@"There is no singleton instance. You must invoke sharedInstanceWithAppId: first." userInfo:nil];
     }
     
     return _instance;
@@ -133,8 +133,6 @@ static SFSocialFacebook *_instance;
 {
     self = [self init];
     if (self) {
-        _permissions = [permissions retain];
-        
 #ifdef DEBUG
         
         // Check App ID:
@@ -197,6 +195,7 @@ static SFSocialFacebook *_instance;
 #endif
                 // Everything is OK
                 _facebook = [[Facebook alloc] initWithAppId:appId urlSchemeSuffix:urlSchemeSuffix andDelegate:self];
+                _permissions = [permissions retain];
                 
                 [self loadLoginInfo];
                 
@@ -1235,7 +1234,7 @@ static SFSocialFacebook *_instance;
                 NSString *postId = [params valueForKey:@"post_id"];
                 // Successful posts return a post_id
                 if (postId) {
-                    SFDLog(@"Feed post ID: %@", [params valueForKey:@"post_id"]);
+                    SFDLog(@"Feed post ID: %@", postId);
                     if (_dialogSuccessBlock) {
                         ((SFCreateObjectBlock)_dialogSuccessBlock)(postId);
                     }

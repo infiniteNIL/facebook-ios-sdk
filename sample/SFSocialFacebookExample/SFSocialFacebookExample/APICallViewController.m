@@ -254,7 +254,7 @@
 - (void)publish
 {
     [[SFSocialFacebook sharedInstance] publishPost:[self postExample] success:^(NSString *postId) {
-        [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Comment created with id: %@", postId]];
+        [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Post created with id: %@", postId]];
     } failure:^(NSError *error) {
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
     } cancel:^{
@@ -278,7 +278,7 @@
             [userTo release];
             
             [[SFSocialFacebook sharedInstance] publishPost:post success:^(NSString *postId) {
-                [self showAlertViewWithTitle:nil message:@"Success!"];
+                [self showAlertViewWithTitle:@"Success" message:[NSString stringWithFormat:@"Post created with id: %@", postId]];
             } failure:^(NSError *error) {
                 [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
             } cancel:^{
@@ -325,8 +325,6 @@
         [self showAlertViewWithTitle:nil message:@"Publish post request cancelled"];
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     }] retain];
-    
-    [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:YES];
 }
 
 - (void)publishToPageWithoutDialog
