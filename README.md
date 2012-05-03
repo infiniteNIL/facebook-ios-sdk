@@ -8,7 +8,7 @@ Installation
 
 ### CocoaPod
 
-    dependency SFSocialFacebook, ~> '1.1.0'
+    dependency 'SFSocialFacebook',  '~>1.2'
 
 ### Non-CocoaPod
 
@@ -95,7 +95,7 @@ There is a sample XCode project using SFSocialFacebook in `sample/SFSocialFacebo
 License
 -------
 
-SFSocialFacebook is licensed under the Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0).
+SFSocialFacebook is licensed under the Apache License, Version 2.0.
 
 Copyright 2012 I.ndigo
 
