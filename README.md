@@ -17,11 +17,11 @@ Copy all files from `src/` except `.xcodeproj`and `.pch` files to your project.
 Setup
 -----
 
-In your `Info.plist` file:
+Configure the `URL Scheme` in your project's `Info.plist` as the image below:
 
 ![Info.plist setup](http://indigotech.github.com/facebook-ios-sdk/images/info-plist-config.png)
 
-In your project's `AppDelegate.m`:
+And your project's `AppDelegate.m`:
 
 ```objective-c
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
@@ -46,7 +46,46 @@ In your project's `AppDelegate.m`:
 Usage Example
 -------------
 
+Publish example:
 
+```objective-c
+SFSimplePost *post = [[SFSimplePost alloc] init];
+    post.name = @"I'm using the I.ndigo Test App for iOS app";
+    post.caption = @"I.ndigo Test App for iOS.";
+    post.postDescription = @"Check out I.ndigo Test App for iOS to learn how you can make your iOS apps social using Facebook Platform.";
+    post.link = @"http://www.i.ndigo.com.br/";
+    post.picture = @"https://fbcdn-photos-a.akamaihd.net/photos-ak-snc1/v85006/197/198801296855729/app_1_198801296855729_3543.gif";
+    post.actionName = @"I.ndigo Website";
+    post.actionLink = @"http://i.ndigo.com.br";
+    post.message = @"Message created by App";
+
+[[SFSocialFacebook sharedInstance] publishPost:post success:^(NSString *postId) {
+    // Success callback
+} failure:^(NSError *error) {
+    // Error callback
+} cancel:^{
+    // Cancel callback
+}];
+
+[post release];
+```
+
+Feed example:
+
+```objective-c
+[[SFSocialFacebook sharedInstance] profileFeed:_profileId 
+                                      pageSize:5 
+                                    needsLogin:_needsLogin
+                                       success:^(NSArray *posts, NSString *nextPageUrl) {
+                                         // Success callback
+                                       }
+                                       failure:^(NSError *error) {
+                                         // Error callback
+                                       }
+                                       cancel:^{
+                                         // Cancel callback
+                                       }];
+```
 
 Sample Application
 ------------------
