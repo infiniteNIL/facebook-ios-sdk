@@ -17,27 +17,36 @@ Copy all files from `src/` except `.xcodeproj`and `.pch` files to your project.
 Setup
 -----
 
+In your `Info.plist` file:
+
+![Info.plist setup](http://indigotech.github.com/facebook-ios-sdk/images/info-plist-config.png)
+
 In your project's `AppDelegate.m`:
 
-    ```objective-c
-    - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-    {
-      NSArray *permissions = [[NSArray alloc] initWithObjects:@"create_event", @"user_events", @"rsvp_event", @"publish_stream", nil];
-      _socialFacebook = [SFSocialFacebook sharedInstanceWithAppId:@"YOUR_APP_ID" appSecret:@"YOUR_APP_SECRET" urlSchemeSuffix:nil andPermissions:permissions];
-      [permissions release];
-      ...
-    }
-    
-    // Pre 4.2 support
-    - (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
-      return [_socialFacebook handleOpenURL:url];
-    }
-    
-    // For 4.2+ support
-    - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
-      return [_socialFacebook handleOpenURL:url];
-    }
-    ```
+```objective-c
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+  NSArray *permissions = [[NSArray alloc] initWithObjects:@"create_event", @"user_events", @"rsvp_event", @"publish_stream", nil];
+  _socialFacebook = [SFSocialFacebook sharedInstanceWithAppId:@"YOUR_APP_ID" appSecret:@"YOUR_APP_SECRET" urlSchemeSuffix:nil andPermissions:permissions];
+  [permissions release];
+  ...
+}
+
+// Pre 4.2 support
+- (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
+  return [_socialFacebook handleOpenURL:url];
+}
+
+// For 4.2+ support
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
+  return [_socialFacebook handleOpenURL:url];
+}
+```
+
+Usage Example
+-------------
+
+
 
 Sample Application
 ------------------
