@@ -642,7 +642,7 @@
         [self showAlertViewWithTitle:@"Error" message:[error localizedDescription]];
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     } cancel:^{
-        [self showAlertViewWithTitle:nil message:@"Post comments request was cancelled"];
+        [self showAlertViewWithTitle:nil message:@"Like object request was cancelled"];
         [[UIApplication sharedApplication] setNetworkActivityIndicatorVisible:NO];
     }] retain];
 
