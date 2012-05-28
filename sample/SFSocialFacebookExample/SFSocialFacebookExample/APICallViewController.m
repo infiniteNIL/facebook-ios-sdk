@@ -187,7 +187,7 @@
     post.caption = @"I.ndigo Test App for iOS.";
     post.postDescription = @"Check out I.ndigo Test App for iOS to learn how you can make your iOS apps social using Facebook Platform.";
     post.link = @"http://www.i.ndigo.com.br/";
-    post.picture = @"https://fbcdn-photos-a.akamaihd.net/photos-ak-snc1/v85006/197/198801296855729/app_1_198801296855729_3543.gif";
+    post.picture = @"http://a0.twimg.com/profile_images/1541310405/tw_logo.png";
     post.actionName = @"I.ndigo Website";
     post.actionLink = @"http://i.ndigo.com.br";
     post.message = @"Message created by App";
